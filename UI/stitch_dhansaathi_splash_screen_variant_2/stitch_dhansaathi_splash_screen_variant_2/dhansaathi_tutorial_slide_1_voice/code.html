@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DhanSaathi Tutorial Slide 1 Voice</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6ee830",
+                        "background-light": "#f6f8f6",
+                        "background-dark": "#162111",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .dark .glass-card {
+            background: rgba(22, 33, 17, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .mic-glow {
+            box-shadow: 0 0 30px 10px rgba(110, 232, 48, 0.3);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark min-h-screen">
+<div class="relative flex h-screen w-full flex-col overflow-hidden">
+<!-- Main Layout Container (Desktop Centered) -->
+<div class="layout-container flex h-full grow flex-col items-center justify-center p-4 md:p-10">
+<!-- Mobile View Simulator (Desktop) -->
+<div class="relative flex h-full max-h-[850px] w-full max-w-[420px] flex-col overflow-hidden rounded-xl bg-gradient-to-b from-primary/10 to-background-light dark:from-primary/5 dark:to-background-dark shadow-2xl">
+<!-- Top Nav Bar -->
+<header class="flex items-center justify-between px-6 py-4">
+<div class="flex items-center gap-2">
+<div class="bg-primary p-1.5 rounded-full text-background-dark">
+<span class="material-symbols-outlined text-[20px] font-bold">payments</span>
+</div>
+<h2 class="text-background-dark dark:text-white text-lg font-extrabold tracking-tight">DhanSaathi</h2>
+</div>
+<button class="size-10 flex items-center justify-center rounded-full bg-white/50 dark:bg-white/10 text-background-dark dark:text-white">
+<span class="material-symbols-outlined">close</span>
+</button>
+</header>
+<!-- Tutorial Slide Content -->
+<div class="flex-1 px-6 flex flex-col items-center justify-center text-center gap-8">
+<!-- Central Visual Element (Glass Card) -->
+<div class="glass-card mic-glow w-full aspect-square rounded-xl flex items-center justify-center relative">
+<!-- Sound Waves Illustration -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+<div class="w-32 h-32 border-2 border-primary rounded-full scale-150"></div>
+<div class="absolute w-32 h-32 border border-primary/50 rounded-full scale-[2]"></div>
+</div>
+<!-- Microphone Icon -->
+<div class="relative z-10 size-32 rounded-full bg-primary flex items-center justify-center text-background-dark shadow-xl">
+<span class="material-symbols-outlined text-[64px] font-light">mic</span>
+</div>
+</div>
+<!-- Bilingual Typography -->
+<div class="flex flex-col gap-3">
+<h1 class="text-background-dark dark:text-white text-2xl font-extrabold leading-tight">
+                            Speak to get things done
+                        </h1>
+<h2 class="text-background-dark/80 dark:text-white/80 text-xl font-bold">
+                            बोलिए और काम कराइए
+                        </h2>
+<p class="text-background-dark/60 dark:text-white/60 text-sm font-medium mt-2">
+                            Search for schemes and ask questions in your own language.
+                        </p>
+</div>
+<!-- Listen Button (Audio Assistance) -->
+<div class="flex justify-center w-full mt-4">
+<button class="group flex items-center gap-3 bg-white dark:bg-white/10 border border-primary/20 rounded-full px-6 py-4 shadow-sm active:scale-95 transition-all">
+<div class="size-10 rounded-full bg-primary/20 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined">volume_up</span>
+</div>
+<span class="text-lg font-bold text-background-dark dark:text-white">Listen / सुनें</span>
+</button>
+</div>
+</div>
+<!-- Footer Navigation -->
+<footer class="p-6 flex flex-col gap-6 bg-white/20 dark:bg-black/10 backdrop-blur-sm">
+<!-- Progress Section -->
+<div class="flex flex-col gap-3">
+<div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-background-dark/50 dark:text-white/40">
+<span>Step 1 of 3</span>
+<span>Tutorial</span>
+</div>
+<div class="flex gap-2 w-full h-1.5">
+<div class="flex-1 bg-primary rounded-full"></div>
+<div class="flex-1 bg-black/10 dark:bg-white/10 rounded-full"></div>
+<div class="flex-1 bg-black/10 dark:bg-white/10 rounded-full"></div>
+</div>
+</div>
+<!-- Primary CTA -->
+<div class="flex items-center gap-4">
+<button class="flex-1 h-14 bg-primary text-background-dark rounded-full font-extrabold text-lg flex items-center justify-center gap-2 shadow-lg shadow-primary/30 active:scale-95 transition-all">
+                            Next / आगे बढ़ें
+                            <span class="material-symbols-outlined font-bold">arrow_forward</span>
+</button>
+</div>
+</footer>
+</div>
+<!-- Desktop Layout Background Decoration -->
+<div class="absolute -top-20 -right-20 size-80 bg-primary/20 rounded-full blur-3xl -z-10"></div>
+<div class="absolute -bottom-20 -left-20 size-96 bg-primary/10 rounded-full blur-3xl -z-10"></div>
+</div>
+</div>
+</body></html>
