@@ -23,9 +23,20 @@ import {
   Volume2,
   Bell,
   LogOut,
+  Landmark, // icon for bank schemes
 } from "lucide-react";
 
+/**
+ * Schemes data
+ * - type: "govt" shows under Govt tab
+ * - type: "bank" shows under Bank tab (includes India Post / small savings / bank channel schemes)
+ * - verified: true => show Verified badge
+ *
+ * NOTE: "bank" tab here is used as "Bank/Post Office savings products & channels".
+ * You can rename tag/types later if you want.
+ */
 const schemesData = [
+  // ---------------- GOVT (Verified) ----------------
   {
     id: "pm-kisan",
     type: "govt",
@@ -33,7 +44,8 @@ const schemesData = [
     verified: true,
     title: "PM Kisan Samman Nidhi",
     desc:
-      "Eligible farmer families receive an annual income support of ₹6,000 in three equal installments directly to their bank accounts.",
+      "Eligible farmer families receive annual income support of ₹6,000 in three installments directly to their bank accounts (as per scheme rules).",
+    source: "https://pmkisan.gov.in/",
   },
   {
     id: "mudra",
@@ -42,8 +54,81 @@ const schemesData = [
     verified: true,
     title: "Pradhan Mantri Mudra Yojana (PMMY)",
     desc:
-      "Financial assistance up to ₹10 Lakh for micro enterprises for manufacturing, trading, and service sector activities.",
+      "Loans up to ₹10 lakh to support micro and small enterprises for manufacturing, trading and services (as per lender/scheme rules).",
+    source: "https://www.mudra.org.in/",
   },
+  {
+    id: "pmjdy",
+    type: "govt",
+    tag: "BANK ACCOUNT",
+    verified: true,
+    title: "Pradhan Mantri Jan Dhan Yojana (PMJDY)",
+    desc:
+      "Financial inclusion program enabling basic savings account with no minimum balance requirement and access to RuPay card & DBT benefits (as applicable).",
+    source: "https://pmjdy.gov.in/",
+  },
+  {
+    id: "apy",
+    type: "govt",
+    tag: "PENSION",
+    verified: true,
+    title: "Atal Pension Yojana (APY)",
+    desc:
+      "Pension scheme for eligible subscribers (typically 18–40) providing a defined pension after 60 based on contributions (subject to rules).",
+    source: "https://www.npscra.proteantech.in/scheme-details.php",
+  },
+  {
+    id: "pmjjby",
+    type: "govt",
+    tag: "LIFE INSURANCE",
+    verified: true,
+    title: "Pradhan Mantri Jeevan Jyoti Bima Yojana (PMJJBY)",
+    desc:
+      "Low-cost renewable life insurance cover with annual premium auto-debited from bank/post office account (eligibility as per scheme rules).",
+    source: "https://financialservices.gov.in/beta/en/pmjjby",
+  },
+  {
+    id: "pmsby",
+    type: "govt",
+    tag: "ACCIDENT INSURANCE",
+    verified: true,
+    title: "Pradhan Mantri Suraksha Bima Yojana (PMSBY)",
+    desc:
+      "Accident insurance cover with a small annual premium auto-debited from bank/post office account (eligibility and benefits as per scheme rules).",
+    source: "https://jansuraksha.in/pmsbyScheme",
+  },
+  {
+    id: "pm-svanidhi",
+    type: "govt",
+    tag: "STREET VENDOR",
+    verified: true,
+    title: "PM SVANidhi (Street Vendor’s AtmaNirbhar Nidhi)",
+    desc:
+      "Working capital loans for eligible street vendors to resume livelihoods, with interest subsidy and incentives as applicable (as per rules).",
+    source: "https://www.myscheme.gov.in/schemes/pm-svanidhi",
+  },
+  {
+    id: "stand-up-india",
+    type: "govt",
+    tag: "WOMEN / SC-ST",
+    verified: true,
+    title: "Stand-Up India",
+    desc:
+      "Facilitates bank loans for eligible SC/ST and/or women entrepreneurs for greenfield enterprises in manufacturing/services/trading (as per rules).",
+    source: "https://www.myscheme.gov.in/schemes/sui",
+  },
+  {
+    id: "ab-pmjay",
+    type: "govt",
+    tag: "HEALTH",
+    verified: true,
+    title: "Ayushman Bharat – PM-JAY",
+    desc:
+      "Health assurance scheme offering coverage for secondary/tertiary hospitalization to eligible families (benefits as per rules).",
+    source: "https://beneficiary.nha.gov.in/",
+  },
+
+  // ---------------- BANK / POST OFFICE (Verified) ----------------
   {
     id: "mahila-savings",
     type: "bank",
@@ -51,14 +136,65 @@ const schemesData = [
     verified: true,
     title: "Mahila Samman Savings Certificate",
     desc:
-      "A one-time small savings scheme for women with a fixed interest rate (tenure based).",
+      "Government-backed small savings scheme for women (via post offices/banks as notified) with fixed tenure and interest as per rules.",
+    source: "https://www.nsiindia.gov.in/",
+  },
+  {
+    id: "ssy",
+    type: "bank",
+    tag: "GIRL CHILD",
+    verified: true,
+    title: "Sukanya Samriddhi Account (SSY)",
+    desc:
+      "Small savings scheme for a girl child with yearly deposit limit and long-term benefits; available through banks/post offices (as notified).",
+    source: "https://www.nsiindia.gov.in/InternalPage.aspx?Id_Pk=89",
+  },
+  {
+    id: "ppf",
+    type: "bank",
+    tag: "TAX SAVING",
+    verified: true,
+    title: "Public Provident Fund (PPF)",
+    desc:
+      "Long-term savings scheme with yearly deposit limits and tax benefits as per rules; available via banks and post offices.",
+    source: "https://www.nsiindia.gov.in/InternalPage.aspx?Id_Pk=169",
+  },
+  {
+    id: "nsc",
+    type: "bank",
+    tag: "FIXED INCOME",
+    verified: true,
+    title: "National Savings Certificate (NSC)",
+    desc:
+      "Government-backed fixed-income savings bond available through post offices; fixed maturity and interest as notified.",
+    source: "https://www.nsiindia.gov.in/InternalPage.aspx?Id_Pk=91",
+  },
+  {
+    id: "kvp",
+    type: "bank",
+    tag: "LONG TERM",
+    verified: true,
+    title: "Kisan Vikas Patra (KVP)",
+    desc:
+      "Post Office savings certificate where a one-time investment grows over a fixed tenure (returns as per notified rates).",
+    source: "https://www.nsiindia.gov.in/InternalPage.aspx?Id_Pk=56",
+  },
+  {
+    id: "po-savings",
+    type: "bank",
+    tag: "POST OFFICE",
+    verified: true,
+    title: "Post Office Savings Account (SB)",
+    desc:
+      "Basic savings account offered by India Post with interest and features as per applicable rules.",
+    source: "https://www.indiapost.gov.in/",
   },
 ];
 
 const trending = [
-  { title: "Sukanya Samriddhi Yojana", views: "12.4k people viewed today" },
-  { title: "Atal Pension Yojana", views: "8.1k people viewed today" },
-  { title: "Post Office Savings Account", views: "5.2k people viewed today" },
+  { title: "Sukanya Samriddhi Account (SSY)", views: "12.4k people viewed today" },
+  { title: "Atal Pension Yojana (APY)", views: "8.1k people viewed today" },
+  { title: "PM Jan Dhan Yojana (PMJDY)", views: "5.2k people viewed today" },
 ];
 
 export default function SchemesScreen() {
@@ -142,7 +278,7 @@ export default function SchemesScreen() {
     }
   };
 
-  // Firestore event logger (optional but recommended)
+  // Firestore event logger
   const logEvent = async (type, data = {}) => {
     if (!fbUser?.uid) return;
     try {
@@ -156,12 +292,12 @@ export default function SchemesScreen() {
     }
   };
 
-  // ✅ Track View Details (increments stats + recentSchemes)
+  // Track View Details
   const trackViewDetails = async (scheme) => {
     if (!fbUser?.uid) return;
 
     try {
-      // increment counter safely even if user doc is missing
+      // increment stats
       await setDoc(
         doc(db, "users", fbUser.uid),
         {
@@ -171,7 +307,7 @@ export default function SchemesScreen() {
         { merge: true }
       );
 
-      // update recent schemes
+      // update recentSchemes subcollection
       await setDoc(
         doc(db, "users", fbUser.uid, "recentSchemes", scheme.id),
         {
@@ -184,6 +320,7 @@ export default function SchemesScreen() {
         { merge: true }
       );
 
+      // log event
       await logEvent("scheme_view_details", {
         schemeId: scheme.id,
         title: scheme.title,
@@ -193,7 +330,7 @@ export default function SchemesScreen() {
     }
   };
 
-  // ✅ Track Listen (increments listened counter)
+  // Track Listen
   const trackListen = async (scheme) => {
     if (!fbUser?.uid) return;
 
@@ -219,7 +356,8 @@ export default function SchemesScreen() {
   // View Details -> track + navigate
   const handleViewDetails = async (scheme) => {
     await trackViewDetails(scheme);
-    navigate(`/schemes/${scheme.id}`);
+    // pass flag so detail screen knows this view was tracked already
+    navigate(`/schemes/${scheme.id}`, { state: { fromList: true } });
   };
 
   // Listen -> track + speak
@@ -239,14 +377,15 @@ export default function SchemesScreen() {
     }
   };
 
-  const pillBase = "px-4 py-2 rounded-full text-sm font-semibold border transition";
+  const pillBase =
+    "px-4 py-2 rounded-full text-sm font-semibold border transition";
   const pillActive = "bg-white border-slate-200 text-slate-900 shadow-sm";
   const pillIdle =
     "bg-slate-50 border-transparent text-slate-600 hover:bg-white hover:border-slate-200";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-blue-50 flex flex-col">
-      {/* ✅ CONSISTENT NAVBAR (matches dashboard) */}
+      {/* Navbar */}
       <header className="w-full bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
           {/* Logo + Brand */}
@@ -347,7 +486,9 @@ export default function SchemesScreen() {
               {menuOpen && (
                 <div className="absolute right-0 mt-3 w-72 rounded-2xl bg-white border border-gray-200 shadow-xl overflow-hidden">
                   <div className="px-4 py-4">
-                    <p className="text-sm font-semibold text-gray-900">{displayName}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {displayName}
+                    </p>
                     <p className="text-xs text-gray-600 mt-1 break-all">
                       {email || "Not signed in"}
                     </p>
@@ -385,7 +526,8 @@ export default function SchemesScreen() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-900">Schemes</h1>
           <p className="text-slate-600 mt-2">
-            Discover personalized financial support and government initiatives tailored for you.
+            Discover personalized financial support and verified initiatives
+            tailored for you.
           </p>
         </div>
 
@@ -422,7 +564,7 @@ export default function SchemesScreen() {
                 value={queryText}
                 onChange={(e) => setQueryText(e.target.value)}
                 className="w-full outline-none text-sm text-slate-700 placeholder:text-slate-400 bg-transparent"
-                placeholder="Search schemes for farmers, business, education..."
+                placeholder="Search schemes for farmers, business, pension, savings..."
               />
             </div>
           </div>
@@ -439,10 +581,18 @@ export default function SchemesScreen() {
               >
                 <div className="flex items-start justify-between gap-6">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
                       <span className="text-[11px] font-extrabold tracking-wide px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                         {s.tag}
                       </span>
+
+                      {s.type === "bank" && (
+                        <span className="text-[11px] font-extrabold tracking-wide px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100 inline-flex items-center gap-1">
+                          <Landmark className="h-3.5 w-3.5" />
+                          Bank / Post Office
+                        </span>
+                      )}
+
                       {s.verified && (
                         <span className="text-xs font-semibold text-emerald-700">
                           ✅ Verified
@@ -455,7 +605,7 @@ export default function SchemesScreen() {
                       {s.desc}
                     </p>
 
-                    <div className="flex items-center gap-3 mt-4">
+                    <div className="flex items-center gap-3 mt-4 flex-wrap">
                       <button
                         type="button"
                         onClick={() => handleViewDetails(s)}
@@ -472,6 +622,24 @@ export default function SchemesScreen() {
                         <Volume2 className="h-4 w-4" />
                         Listen
                       </button>
+
+                      {s.source ? (
+                        <a
+                          href={s.source}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition"
+                          onClick={() =>
+                            logEvent("scheme_open_source", {
+                              schemeId: s.id,
+                              title: s.title,
+                              source: s.source,
+                            })
+                          }
+                        >
+                          Official Source ↗
+                        </a>
+                      ) : null}
                     </div>
                   </div>
 
@@ -522,8 +690,6 @@ export default function SchemesScreen() {
                 Be cautious of scammers.
               </p>
             </div>
-
-            {/* ✅ Removed "Total Benefits Claimed" as requested */}
           </aside>
         </div>
       </main>
@@ -531,9 +697,7 @@ export default function SchemesScreen() {
       {/* Bottom right voice widget + mic button */}
       <div className="fixed bottom-6 right-6 flex items-end gap-3">
         <div className="hidden md:block bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl px-4 py-3 shadow-[0_18px_45px_rgba(15,23,42,0.10)]">
-          <p className="text-sm text-slate-700">
-            “Tell me about schemes for students”
-          </p>
+          <p className="text-sm text-slate-700">“Tell me about schemes for pension”</p>
         </div>
 
         <button

@@ -14,6 +14,8 @@ import {
   query,
   serverTimestamp,
   updateDoc,
+  limit,
+  setDoc,
 } from "firebase/firestore";
 
 import {
@@ -37,8 +39,20 @@ import {
   IndianRupee,
 } from "lucide-react";
 
+/** Filter chips for the feed */
 const CATEGORIES = [
   "All Discussions",
+  "Tax Planning",
+  "Mutual Funds",
+  "Stock Market",
+  "Insurance",
+  "Retirement",
+  "Crypto",
+];
+
+/** Domains for posting a question */
+const ASK_DOMAINS = [
+  "General",
   "Tax Planning",
   "Mutual Funds",
   "Stock Market",
@@ -52,7 +66,7 @@ function timeAgo(date) {
   const ms = Date.now() - date.getTime();
   const mins = Math.floor(ms / 60000);
   if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} min ago`;
+  if (mins < 60) return `${mins} min${mins > 1 ? "s" : ""} ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`;
   const days = Math.floor(hours / 24);
@@ -72,8 +86,10 @@ export default function CommunityScreen() {
   const [searchText, setSearchText] = useState("");
   const [questions, setQuestions] = useState([]);
 
-  // Ask modal
+  // Ask modal (2-step)
   const [askOpen, setAskOpen] = useState(false);
+  const [askStep, setAskStep] = useState(0); // 0 = domain select, 1 = form
+  const [askCategory, setAskCategory] = useState("General");
   const [askTitle, setAskTitle] = useState("");
   const [askBody, setAskBody] = useState("");
 
@@ -81,6 +97,9 @@ export default function CommunityScreen() {
   const [openQid, setOpenQid] = useState(null);
   const [answers, setAnswers] = useState([]);
   const [answerText, setAnswerText] = useState("");
+
+  // Top contributors from Firestore
+  const [contributors, setContributors] = useState([]);
 
   // Navbar navigation
   const goHome = () => navigate("/home");
@@ -109,13 +128,17 @@ export default function CommunityScreen() {
   const initials = useMemo(() => {
     const src = (displayName || email || "U").trim();
     const parts = src.split(" ").filter(Boolean);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    if (parts.length >= 2)
+      return (parts[0][0] + parts[1][0]).toUpperCase();
     return (src[0] || "U").toUpperCase();
   }, [displayName, email]);
 
   // Live questions from Firestore
   useEffect(() => {
-    const qy = query(collection(db, "communityQuestions"), orderBy("createdAt", "desc"));
+    const qy = query(
+      collection(db, "communityQuestions"),
+      orderBy("createdAt", "desc")
+    );
     const unsub = onSnapshot(
       qy,
       (snap) => {
@@ -124,7 +147,9 @@ export default function CommunityScreen() {
           return {
             id: d.id,
             ...data,
-            createdAtDate: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+            createdAtDate: data.createdAt?.toDate
+              ? data.createdAt.toDate()
+              : null,
           };
         });
         setQuestions(rows);
@@ -155,7 +180,9 @@ export default function CommunityScreen() {
           return {
             id: d.id,
             ...data,
-            createdAtDate: data.createdAt?.toDate ? data.createdAt.toDate() : null,
+            createdAtDate: data.createdAt?.toDate
+              ? data.createdAt.toDate()
+              : null,
           };
         });
         setAnswers(rows);
@@ -168,12 +195,45 @@ export default function CommunityScreen() {
     return () => unsub();
   }, [openQid]);
 
+  // Top contributors from Firestore (real-time)
+  useEffect(() => {
+    const qy = query(
+      collection(db, "users"),
+      orderBy("score", "desc"),
+      limit(3)
+    );
+    const unsub = onSnapshot(
+      qy,
+      (snap) => {
+        const rows = snap.docs.map((d) => {
+          const data = d.data();
+          const answersCount = data.answersCount || 0;
+          return {
+            id: d.id,
+            name: data.name || data.displayName || "User",
+            // If you later add a custom role, it will show; otherwise "x Answers"
+            role: data.role || `${answersCount} Answers`,
+            score: data.score || 0,
+            photoURL: data.photoURL || "",
+          };
+        });
+        setContributors(rows);
+      },
+      (err) => {
+        console.error("top contributors read error:", err);
+        setContributors([]);
+      }
+    );
+    return () => unsub();
+  }, []);
+
   const filteredQuestions = useMemo(() => {
     const q = searchText.trim().toLowerCase();
 
     return questions.filter((item) => {
       const matchesCategory =
-        selectedCategory === "All Discussions" || item.category === selectedCategory;
+        selectedCategory === "All Discussions" ||
+        (item.category || "General") === selectedCategory;
 
       const matchesSearch =
         !q ||
@@ -184,6 +244,16 @@ export default function CommunityScreen() {
       return matchesCategory && matchesSearch;
     });
   }, [questions, selectedCategory, searchText]);
+
+  // Optional: counts for domains (nice UX in domain picker)
+  const domainCounts = useMemo(() => {
+    const counts = {};
+    for (const q of questions) {
+      const cat = q.category || "General";
+      counts[cat] = (counts[cat] || 0) + 1;
+    }
+    return counts;
+  }, [questions]);
 
   const handleLogout = async () => {
     setMenuOpen(false);
@@ -196,14 +266,23 @@ export default function CommunityScreen() {
     }
   };
 
+  // Ask flow: open domain selection first
   const handleAskOpen = () => {
     if (!fbUser) {
       alert("Please sign in to ask a question.");
       navigate("/signup");
       return;
     }
+
     setAskTitle("");
     setAskBody("");
+
+    // default domain based on currently selected filter
+    const defaultDomain =
+      selectedCategory === "All Discussions" ? "General" : selectedCategory;
+
+    setAskCategory(defaultDomain);
+    setAskStep(0);
     setAskOpen(true);
   };
 
@@ -222,7 +301,7 @@ export default function CommunityScreen() {
       await addDoc(collection(db, "communityQuestions"), {
         title,
         body,
-        category: selectedCategory === "All Discussions" ? "General" : selectedCategory,
+        category: askCategory || "General",
 
         uid: fbUser.uid,
         authorName: fbUser.displayName || "User",
@@ -239,17 +318,25 @@ export default function CommunityScreen() {
       });
 
       setAskOpen(false);
+      setAskStep(0);
+
+      // Optional: switch feed to that domain
+      setSelectedCategory(
+        askCategory === "General" ? "All Discussions" : askCategory
+      );
     } catch (e) {
       console.error(e);
-      alert(`Failed to post question: ${e?.code || ""} ${e?.message || ""}`);
+      alert(
+        `Failed to post question: ${e?.code || ""} ${e?.message || ""}`
+      );
     }
   };
 
   const openAnswers = async (qid) => {
-    setAnswerText(""); // reset input when switching
+    setAnswerText("");
     setOpenQid((curr) => (curr === qid ? null : qid));
 
-    // increment views when opening
+    // Increment view count
     try {
       await updateDoc(doc(db, "communityQuestions", qid), {
         viewsCount: increment(1),
@@ -268,11 +355,12 @@ export default function CommunityScreen() {
       });
     } catch (e) {
       console.error("helpful increment error:", e);
-      alert(`Failed to mark helpful: ${e?.code || ""} ${e?.message || ""}`);
+      alert(
+        `Failed to mark helpful: ${e?.code || ""} ${e?.message || ""}`
+      );
     }
   };
 
-  // ✅ FIXED: post answer should not fail due to counter update
   const submitAnswer = async () => {
     if (!fbUser) {
       alert("Please sign in to answer.");
@@ -285,17 +373,20 @@ export default function CommunityScreen() {
     if (!text) return;
 
     try {
-      // 1) create answer
-      await addDoc(collection(db, "communityQuestions", openQid, "answers"), {
-        uid: fbUser.uid,
-        authorName: fbUser.displayName || "User",
-        authorEmail: fbUser.email || "",
-        authorPhotoURL: fbUser.photoURL || "",
-        text,
-        createdAt: serverTimestamp(),
-      });
+      // Add answer to the question
+      await addDoc(
+        collection(db, "communityQuestions", openQid, "answers"),
+        {
+          uid: fbUser.uid,
+          authorName: fbUser.displayName || "User",
+          authorEmail: fbUser.email || "",
+          authorPhotoURL: fbUser.photoURL || "",
+          text,
+          createdAt: serverTimestamp(),
+        }
+      );
 
-      // 2) try to increment answersCount (if rules block, answer still exists)
+      // Best-effort increment answersCount on question
       try {
         await updateDoc(doc(db, "communityQuestions", openQid), {
           answersCount: increment(1),
@@ -303,7 +394,25 @@ export default function CommunityScreen() {
         });
       } catch (e2) {
         console.error("answersCount increment blocked:", e2);
-        // do not throw
+      }
+
+      // 1 comment = 5 score => update user's score + answersCount
+      try {
+        const userRef = doc(db, "users", fbUser.uid);
+        await setDoc(
+          userRef,
+          {
+            uid: fbUser.uid,
+            name: fbUser.displayName || "User",
+            email: fbUser.email || "",
+            photoURL: fbUser.photoURL || "",
+            answersCount: increment(1),
+            score: increment(5), // <-- 1 comment = +5 score
+          },
+          { merge: true }
+        );
+      } catch (e3) {
+        console.error("user score update error:", e3);
       }
 
       setAnswerText("");
@@ -314,16 +423,11 @@ export default function CommunityScreen() {
   };
 
   const badgeStyle = (badge) => {
-    if (badge === "Expert Verified") return "bg-emerald-50 text-emerald-700";
+    if (badge === "Expert Verified")
+      return "bg-emerald-50 text-emerald-700";
     if (badge === "Trending") return "bg-blue-50 text-blue-700";
     return "bg-amber-50 text-amber-700";
   };
-
-  const contributors = [
-    { name: "Animesh Das", role: "CA · 27 Answers", score: "+275 pts" },
-    { name: "Sneha Reddy", role: "Tax Expert · 18 Answers", score: "+190 pts" },
-    { name: "Rajesh Iyer", role: "Investor · 12 Answers", score: "+140 pts" },
-  ];
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
@@ -331,24 +435,20 @@ export default function CommunityScreen() {
       <div
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `
-            radial-gradient(circle at top left, rgba(187,247,208,0.6) 0, transparent 55%),
-            radial-gradient(circle at bottom right, rgba(191,219,254,0.55) 0, transparent 55%)
-          `,
+          backgroundImage:
+            "radial-gradient(circle at top left, rgba(187,247,208,0.6) 0, transparent 55%), radial-gradient(circle at bottom right, rgba(191,219,254,0.55) 0, transparent 55%)",
           opacity: 0.7,
         }}
       />
 
       <div className="relative z-10 flex flex-col min-h-screen">
-        {/* ✅ CONSISTENT NAVBAR */}
+        {/* NAVBAR */}
         <header className="w-full bg-white/90 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-            {/* Logo + Brand */}
             <button
               type="button"
               onClick={goHome}
               className="flex items-center gap-2.5"
-              aria-label="Go to Dashboard"
             >
               <div className="h-9 w-9 rounded-xl bg-green-600 flex items-center justify-center shadow-md">
                 <IndianRupee className="h-5 w-5 text-white" />
@@ -358,36 +458,50 @@ export default function CommunityScreen() {
               </span>
             </button>
 
-            {/* Nav links */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
-              <button type="button" onClick={goHome} className="flex items-center gap-1.5 hover:text-gray-900 transition">
-                <Home className="h-4 w-4" />
-                Home
+              <button
+                type="button"
+                onClick={goHome}
+                className="flex items-center gap-1.5 hover:text-gray-900 transition"
+              >
+                <Home className="h-4 w-4" /> Home
               </button>
 
-              <button type="button" onClick={goSchemes} className="flex items-center gap-1.5 hover:text-gray-900 transition">
-                <Building2 className="h-4 w-4" />
-                Schemes
+              <button
+                type="button"
+                onClick={goSchemes}
+                className="flex items-center gap-1.5 hover:text-gray-900 transition"
+              >
+                <Building2 className="h-4 w-4" /> Schemes
               </button>
 
-              <button type="button" onClick={goCommunity} className="relative text-green-700 font-semibold flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={goCommunity}
+                className="relative text-green-700 font-semibold flex items-center gap-1.5"
+              >
                 <MessageCircle className="h-4 w-4" />
                 Community
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-green-600" />
               </button>
 
-              <button type="button" className="flex items-center gap-1.5 hover:text-gray-900 transition" onClick={() => alert("Learn coming soon")}>
-                <BookOpen className="h-4 w-4" />
-                Learn
+              <button
+                type="button"
+                className="flex items-center gap-1.5 hover:text-gray-900 transition"
+                onClick={() => navigate("/learn")}
+              >
+                <BookOpen className="h-4 w-4" /> Learn
               </button>
 
-              <button type="button" className="flex items-center gap-1.5 hover:text-gray-900 transition" onClick={() => alert("Help coming soon")}>
-                <ShieldCheck className="h-4 w-4" />
-                Help
+              <button
+                type="button"
+                className="flex items-center gap-1.5 hover:text-gray-900 transition"
+                onClick={() => navigate("/help")}
+              >
+                <ShieldCheck className="h-4 w-4" /> Help
               </button>
             </nav>
 
-            {/* Right: Bell + Profile dropdown */}
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -420,7 +534,9 @@ export default function CommunityScreen() {
                 {menuOpen && (
                   <div className="absolute right-0 mt-3 w-72 rounded-2xl bg-white border border-gray-200 shadow-xl overflow-hidden">
                     <div className="px-4 py-4">
-                      <p className="text-sm font-semibold text-gray-900">{displayName}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {displayName}
+                      </p>
                       <p className="text-xs text-gray-600 mt-1 break-all">
                         {email || "Not signed in"}
                       </p>
@@ -455,7 +571,7 @@ export default function CommunityScreen() {
 
         {/* MAIN */}
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-9">
-          {/* Top row */}
+          {/* top row */}
           <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between mb-6">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
@@ -477,6 +593,7 @@ export default function CommunityScreen() {
                   className="bg-transparent outline-none text-sm text-gray-700 flex-1"
                 />
               </div>
+
               <button
                 type="button"
                 onClick={handleAskOpen}
@@ -506,13 +623,15 @@ export default function CommunityScreen() {
             ))}
           </div>
 
-          {/* Main grid */}
+          {/* grid */}
           <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
             {/* LEFT */}
             <section className="space-y-4">
               {filteredQuestions.length === 0 ? (
                 <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow p-6 text-gray-700">
-                  No discussions yet. Click <span className="font-semibold">Ask question</span> to start.
+                  No discussions yet. Click{" "}
+                  <span className="font-semibold">Ask question</span> to
+                  start.
                 </div>
               ) : (
                 filteredQuestions.map((q) => (
@@ -537,13 +656,16 @@ export default function CommunityScreen() {
                             {q.authorName || "User"}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {timeAgo(q.createdAtDate)} • {q.category || "General"}
+                            {timeAgo(q.createdAtDate)} •{" "}
+                            {q.category || "General"}
                           </p>
                         </div>
                       </div>
 
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${badgeStyle(q.badge)}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold ${badgeStyle(
+                          q.badge
+                        )}`}
                       >
                         {q.badge === "Expert Verified" && (
                           <ShieldCheck className="h-3.5 w-3.5" />
@@ -600,7 +722,10 @@ export default function CommunityScreen() {
                         ) : (
                           <div className="space-y-3">
                             {answers.map((a) => (
-                              <div key={a.id} className="bg-white rounded-xl border border-gray-100 p-3">
+                              <div
+                                key={a.id}
+                                className="bg-white rounded-xl border border-gray-100 p-3"
+                              >
                                 <div className="flex items-center gap-2 mb-1">
                                   {a.authorPhotoURL ? (
                                     <img
@@ -611,7 +736,8 @@ export default function CommunityScreen() {
                                     />
                                   ) : (
                                     <div className="h-7 w-7 rounded-full bg-emerald-100 text-emerald-800 grid place-items-center text-xs font-bold">
-                                      {(a.authorName || "U")[0]?.toUpperCase()}
+                                      {(a.authorName || "U")[0]
+                                        ?.toUpperCase()}
                                     </div>
                                   )}
                                   <div className="min-w-0">
@@ -623,7 +749,9 @@ export default function CommunityScreen() {
                                     </p>
                                   </div>
                                 </div>
-                                <p className="text-sm text-gray-700">{a.text}</p>
+                                <p className="text-sm text-gray-700">
+                                  {a.text}
+                                </p>
                               </div>
                             ))}
                           </div>
@@ -634,7 +762,11 @@ export default function CommunityScreen() {
                             value={answerText}
                             onChange={(e) => setAnswerText(e.target.value)}
                             rows={3}
-                            placeholder={fbUser ? "Write your answer..." : "Sign in to answer..."}
+                            placeholder={
+                              fbUser
+                                ? "Write your answer..."
+                                : "Sign in to answer..."
+                            }
                             className="w-full rounded-xl border border-gray-200 p-3 text-sm outline-none focus:ring-2 focus:ring-green-200"
                             disabled={!fbUser}
                           />
@@ -643,7 +775,9 @@ export default function CommunityScreen() {
                               type="button"
                               onClick={submitAnswer}
                               className="px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-50"
-                              disabled={!fbUser || !answerText.trim()}
+                              disabled={
+                                !fbUser || !answerText.trim()
+                              }
                             >
                               Post answer
                             </button>
@@ -659,29 +793,56 @@ export default function CommunityScreen() {
             {/* RIGHT */}
             <aside className="space-y-5 lg:space-y-6">
               <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center justify-between">
-                  <span>Top contributors</span>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Top contributors
+                  </h3>
                   <Award className="h-5 w-5 text-amber-500" />
-                </h3>
-                <div className="space-y-3">
-                  {contributors.map((c, idx) => (
-                    <div key={c.name} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-xs font-semibold text-emerald-700">
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                          <p className="text-xs text-gray-500">{c.role}</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-semibold text-emerald-700">{c.score}</span>
-                    </div>
-                  ))}
                 </div>
-                <button className="mt-3 text-xs font-medium text-emerald-700 hover:text-emerald-800">
-                  View leaderboard →
-                </button>
+
+                {contributors.length === 0 ? (
+                  <p className="text-xs text-gray-500">
+                    No contributors yet.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {contributors.map((c, idx) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-xs font-semibold text-emerald-700">
+                            {idx + 1}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {c.photoURL ? (
+                              <img
+                                src={c.photoURL}
+                                alt={c.name}
+                                className="h-8 w-8 rounded-full object-cover"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : null}
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">
+                                {c.name}
+                              </p>
+                              {c.role ? (
+                                <p className="text-xs text-gray-500">
+                                  {c.role}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="text-xs font-semibold text-emerald-700">
+                          {`+${c.score} pts`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5">
@@ -696,87 +857,160 @@ export default function CommunityScreen() {
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5" />
-                    Search for existing questions before posting new ones.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 mt-0.5" />
-                    No sharing of OTPs, passwords, or personal bank details.
+                    No OTP/PIN sharing.
                   </li>
                 </ul>
               </div>
 
-              <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5 flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <Users className="h-6 w-6 text-emerald-600" />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">Community</p>
-                    <p className="text-xs text-gray-500">Growing with every question</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">Safety</p>
-                    <p className="text-xs text-gray-500">Never share OTP/PIN</p>
-                  </div>
+              <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5 flex items-center gap-3">
+                <Users className="h-6 w-6 text-emerald-600" />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900">
+                    Community
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Growing with every question
+                  </p>
                 </div>
               </div>
             </aside>
           </div>
         </main>
 
-        {/* Ask Question Modal */}
+        {/* Ask Question Modal (Domain picker -> Form) */}
         {askOpen && (
           <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4">
             <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-200 p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">Ask a question</h3>
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Ask a question
+                  </h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    Category:{" "}
-                    <span className="font-semibold text-gray-900">
-                      {selectedCategory === "All Discussions" ? "General" : selectedCategory}
-                    </span>
+                    Step {askStep + 1} of 2
                   </p>
                 </div>
-                <button type="button" onClick={() => setAskOpen(false)} className="text-gray-500 hover:text-gray-900">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAskOpen(false);
+                    setAskStep(0);
+                  }}
+                  className="text-gray-500 hover:text-gray-900"
+                >
                   ✕
                 </button>
               </div>
 
-              <div className="mt-4 space-y-3">
-                <input
-                  value={askTitle}
-                  onChange={(e) => setAskTitle(e.target.value)}
-                  placeholder="Question title"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-200"
-                />
-                <textarea
-                  value={askBody}
-                  onChange={(e) => setAskBody(e.target.value)}
-                  placeholder="Describe your question..."
-                  rows={5}
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-200"
-                />
-              </div>
+              {/* Step 0: Choose Domain */}
+              {askStep === 0 && (
+                <div className="mt-5">
+                  <p className="text-sm font-semibold text-gray-900 mb-3">
+                    Choose a domain
+                  </p>
 
-              <div className="mt-5 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setAskOpen(false)}
-                  className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAskSubmit}
-                  className="px-4 py-2 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 disabled:opacity-50"
-                  disabled={!askTitle.trim() || !askBody.trim()}
-                >
-                  Post question
-                </button>
-              </div>
+                  <div className="flex flex-wrap gap-2">
+                    {ASK_DOMAINS.map((d) => {
+                      const active = askCategory === d;
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setAskCategory(d)}
+                          className={
+                            active
+                              ? "px-3 py-2 rounded-full bg-green-600 text-white text-sm font-semibold"
+                              : "px-3 py-2 rounded-full bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-800 hover:bg-white"
+                          }
+                        >
+                          {d}
+                          <span className="ml-2 text-xs opacity-80">
+                            {domainCounts[d]
+                              ? `(${domainCounts[d]})`
+                              : ""}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAskOpen(false);
+                        setAskStep(0);
+                      }}
+                      className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAskStep(1)}
+                      className="px-4 py-2 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 1: Title + Body */}
+              {askStep === 1 && (
+                <div className="mt-5">
+                  <div className="mb-3 text-sm text-gray-600">
+                    Domain:{" "}
+                    <span className="font-semibold text-gray-900">
+                      {askCategory}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAskStep(0)}
+                      className="ml-3 text-green-700 font-semibold hover:text-green-800"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <input
+                      value={askTitle}
+                      onChange={(e) => setAskTitle(e.target.value)}
+                      placeholder="Question title"
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-200"
+                    />
+                    <textarea
+                      value={askBody}
+                      onChange={(e) => setAskBody(e.target.value)}
+                      placeholder="Describe your question..."
+                      rows={5}
+                      className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-green-200"
+                    />
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setAskStep(0)}
+                      className="px-4 py-2 rounded-full bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200"
+                    >
+                      ← Back
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleAskSubmit}
+                      className="px-4 py-2 rounded-full bg-green-600 text-white font-semibold hover:bg-green-700 disabled:opacity-50"
+                      disabled={
+                        !askTitle.trim() || !askBody.trim()
+                      }
+                    >
+                      Post question
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
