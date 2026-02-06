@@ -26,10 +26,248 @@ import {
   Landmark,
   ArrowLeft,
   ExternalLink,
+  Play,
+  Youtube,
 } from "lucide-react";
 import { getSchemeById } from "../../data/schemes";
 
-// Small reusable section wrapper
+/* ───────────────────────────────────────────────
+   YouTube video mapping — keys match scheme IDs
+   exactly from src/data/schemes.js
+   ─────────────────────────────────────────────── */
+const SCHEME_VIDEOS = {
+  "stand-up-india": {
+    videoId: "x80lfYGxjH8",
+    url: "https://youtu.be/x80lfYGxjH8?si=tpHg0JAraCGwkKCt",
+    title: "Stand Up India Scheme – Complete Guide",
+    description:
+      "Learn everything about the Stand Up India Scheme including eligibility, loan amount, how to apply, and key benefits for SC/ST and women entrepreneurs.",
+  },
+  "pm-kisan": {
+    videoId: "xsqBqK15Bz8",
+    url: "https://youtu.be/xsqBqK15Bz8?si=Z2j2MoQ-jHUD4eqk",
+    title: "PM Kisan Samman Nidhi – Full Explanation",
+    description:
+      "Understand PM Kisan Samman Nidhi Yojana – ₹6,000 per year for farmers. Who is eligible, how to register, and how to check your payment status.",
+  },
+  mudra: {
+    videoId: "LwMYQI7Rh0Y",
+    url: "https://youtu.be/LwMYQI7Rh0Y?si=QxUxdMNsL9HFuSGk",
+    title: "Pradhan Mantri Mudra Yojana – Detailed Guide",
+    description:
+      "Everything about MUDRA Loans – Shishu, Kishore & Tarun categories. Loan amounts up to ₹10 lakh without collateral for small businesses.",
+  },
+  apy: {
+    videoId: "FKIWVHHtxnA",
+    url: "https://youtu.be/FKIWVHHtxnA?si=lasEm9zE9f5Wmh8y",
+    title: "Atal Pension Yojana (APY) – Complete Overview",
+    description:
+      "Learn about Atal Pension Yojana – guaranteed monthly pension of ₹1,000 to ₹5,000 after age 60. Eligibility, contribution chart, and how to enrol.",
+  },
+  pmjjby: {
+    videoId: "ZZ6-er521j0",
+    url: "https://youtu.be/ZZ6-er521j0?si=yoDzsrtVsZlmg_Oy",
+    title: "PM Jeevan Jyoti Bima Yojana – Explained",
+    description:
+      "₹2 lakh life insurance cover at just ₹436/year. Who can apply, how to enrol through your bank, and what your family receives.",
+  },
+  pmsby: {
+    videoId: "qHM1V_nOFbE",
+    url: "https://youtu.be/qHM1V_nOFbE?si=y1CENfyGUOY-cGZB",
+    title: "PM Suraksha Bima Yojana – Full Details",
+    description:
+      "Accidental insurance cover of ₹2 lakh at just ₹20/year. Understand the scheme benefits, claim process, and how to activate it via your bank.",
+  },
+  "pm-svanidhi": {
+    videoId: "36pkdhPFIqs",
+    url: "https://youtu.be/36pkdhPFIqs?si=9sr7NCJK1gln9yLr",
+    title: "PM SVANidhi – Street Vendor Loan Scheme",
+    description:
+      "Micro-credit facility for street vendors – loans up to ₹50,000 with interest subsidy and digital payment incentives. Full application guide.",
+  },
+  "ab-pmjay": {
+    videoId: "SToefGBjhbM",
+    url: "https://youtu.be/SToefGBjhbM?si=IgADSvHQ_RKkGpuN",
+    title: "Ayushman Bharat PM-JAY – Health Insurance Explained",
+    description:
+      "₹5 lakh health insurance per family per year. Check eligibility, find empanelled hospitals, and understand how to get your Ayushman card.",
+  },
+};
+
+/* ───────────────────────────────────────────────
+   YouTube Video Section Component
+   ─────────────────────────────────────────────── */
+function YouTubeVideoSection({ schemeId }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoData = SCHEME_VIDEOS[schemeId];
+
+  if (!videoData) return null;
+
+  const thumbnailUrl = `https://img.youtube.com/vi/${videoData.videoId}/hqdefault.jpg`;
+
+  return (
+    <section className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl overflow-hidden shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
+      {/* Section Header */}
+      <div className="px-5 md:px-6 pt-5 md:pt-6 pb-3">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="h-8 w-8 rounded-lg bg-red-50 flex items-center justify-center">
+            <Youtube className="h-4 w-4 text-red-600" />
+          </div>
+          <h2 className="text-base md:text-lg font-bold text-slate-900">
+            Watch & Learn
+          </h2>
+        </div>
+        <p className="text-sm text-slate-500 ml-[42px]">
+          Watch this video to understand the scheme in simple language
+        </p>
+      </div>
+
+      {/* Video Embed / Thumbnail */}
+      <div className="px-5 md:px-6 pb-2">
+        <div className="relative w-full rounded-2xl overflow-hidden bg-slate-900 shadow-lg border border-slate-200/50">
+          <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+            {isPlaying ? (
+              <iframe
+                className="absolute inset-0 w-full h-full"
+                src={`https://www.youtube.com/embed/${videoData.videoId}?autoplay=1&rel=0&modestbranding=1`}
+                title={videoData.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ border: "none" }}
+              />
+            ) : (
+              <>
+                <img
+                  src={thumbnailUrl}
+                  alt={videoData.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
+
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying(true)}
+                  className="absolute inset-0 flex items-center justify-center group cursor-pointer"
+                  aria-label={`Play video: ${videoData.title}`}
+                >
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-red-500/30 animate-ping" />
+                    <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-full bg-red-600 shadow-2xl flex items-center justify-center group-hover:bg-red-700 group-hover:scale-110 transition-all duration-300">
+                      <Play
+                        className="h-7 w-7 md:h-9 md:w-9 text-white ml-1"
+                        fill="white"
+                      />
+                    </div>
+                  </div>
+                </button>
+
+                <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-lg">
+                  <Youtube className="h-3.5 w-3.5 text-red-400" />
+                  YouTube
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Video Info */}
+      <div className="px-5 md:px-6 py-4">
+        <h3 className="text-sm md:text-[15px] font-bold text-slate-900 leading-snug">
+          {videoData.title}
+        </h3>
+        <p className="text-xs md:text-sm text-slate-600 mt-1.5 leading-relaxed">
+          {videoData.description}
+        </p>
+
+        <div className="flex flex-wrap items-center gap-2.5 mt-3.5">
+          {!isPlaying && (
+            <button
+              type="button"
+              onClick={() => setIsPlaying(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition shadow-md shadow-red-200"
+            >
+              <Play className="h-4 w-4" fill="white" />
+              Play Video
+            </button>
+          )}
+
+          <a
+            href={videoData.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Open on YouTube
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ───────────────────────────────────────────────
+   Sidebar Video Card Component
+   ─────────────────────────────────────────────── */
+function SidebarVideoCard({ schemeId }) {
+  const videoData = SCHEME_VIDEOS[schemeId];
+  if (!videoData) return null;
+
+  const thumbnailUrl = `https://img.youtube.com/vi/${videoData.videoId}/mqdefault.jpg`;
+
+  return (
+    <div className="bg-gradient-to-br from-red-50 to-orange-50 backdrop-blur border border-red-200/60 rounded-3xl p-5 overflow-hidden">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center">
+          <Youtube className="h-4 w-4 text-red-600" />
+        </div>
+        <h4 className="font-bold text-red-900 text-sm">Video explainer</h4>
+      </div>
+
+      {/* Mini thumbnail */}
+      <a
+        href={videoData.url}
+        target="_blank"
+        rel="noreferrer"
+        className="block relative w-full rounded-xl overflow-hidden mb-3 group"
+      >
+        <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+          <img
+            src={thumbnailUrl}
+            alt={videoData.title}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-red-600 shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Play className="h-5 w-5 text-white ml-0.5" fill="white" />
+            </div>
+          </div>
+        </div>
+      </a>
+
+      <p className="text-xs text-red-900/70 mb-3 leading-relaxed line-clamp-2">
+        {videoData.description}
+      </p>
+      <a
+        href={videoData.url}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition shadow-md shadow-red-200"
+      >
+        <Play className="h-3.5 w-3.5" fill="white" />
+        Watch on YouTube
+      </a>
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────
+   Small reusable section wrapper
+   ─────────────────────────────────────────────── */
 function DetailSection({ title, children }) {
   if (!children) return null;
   return (
@@ -44,7 +282,9 @@ function DetailSection({ title, children }) {
   );
 }
 
-// Simple bullet list renderer
+/* ───────────────────────────────────────────────
+   Simple bullet list renderer
+   ─────────────────────────────────────────────── */
 function BulletList({ items }) {
   if (!items || !items.length) return null;
   return (
@@ -56,24 +296,24 @@ function BulletList({ items }) {
   );
 }
 
+/* ═══════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════ */
 export default function SchemeDetailScreen() {
   const navigate = useNavigate();
   const { schemeId } = useParams();
   const location = useLocation();
   const fromList = location.state?.fromList || false;
 
-  // Auth + profile dropdown (same pattern as SchemesScreen)
   const [fbUser, setFbUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
 
-  // auth state
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setFbUser(u || null));
     return () => unsub();
   }, []);
 
-  // close dropdown on outside click
   useEffect(() => {
     const onDown = (e) => {
       if (!menuRef.current) return;
@@ -93,7 +333,6 @@ export default function SchemeDetailScreen() {
     return (src[0] || "U").toUpperCase();
   }, [displayName, email]);
 
-  // Navbar navigation
   const goHome = () => navigate("/home");
   const goSchemes = () => navigate("/schemes");
   const goCommunity = () => navigate("/community");
@@ -109,7 +348,6 @@ export default function SchemeDetailScreen() {
     }
   };
 
-  // Voice speak
   const speak = (text) => {
     try {
       window.speechSynthesis.cancel();
@@ -121,7 +359,6 @@ export default function SchemeDetailScreen() {
     }
   };
 
-  // Get scheme from shared data
   const scheme = useMemo(() => getSchemeById(schemeId), [schemeId]);
   const details = scheme?.details || {};
 
@@ -132,7 +369,8 @@ export default function SchemeDetailScreen() {
       ? "Bank / Post Office Savings Product"
       : "";
 
-  // Firestore event logger
+  const hasVideo = scheme ? !!SCHEME_VIDEOS[scheme.id] : false;
+
   const logEvent = async (type, data = {}) => {
     if (!fbUser?.uid) return;
     try {
@@ -146,10 +384,8 @@ export default function SchemeDetailScreen() {
     }
   };
 
-  // Track view from detail page (for direct / dashboard entry)
   const trackViewFromDetail = async () => {
     if (!fbUser?.uid || !scheme) return;
-
     try {
       await setDoc(
         doc(db, "users", fbUser.uid),
@@ -159,7 +395,6 @@ export default function SchemeDetailScreen() {
         },
         { merge: true }
       );
-
       await setDoc(
         doc(db, "users", fbUser.uid, "recentSchemes", scheme.id),
         {
@@ -171,7 +406,6 @@ export default function SchemeDetailScreen() {
         },
         { merge: true }
       );
-
       await logEvent("scheme_view_details_detail_page", {
         schemeId: scheme.id,
         title: scheme.title,
@@ -181,10 +415,8 @@ export default function SchemeDetailScreen() {
     }
   };
 
-  // Track listen from detail page
   const trackListenFromDetail = async () => {
     if (!fbUser?.uid || !scheme) return;
-
     try {
       await setDoc(
         doc(db, "users", fbUser.uid),
@@ -194,7 +426,6 @@ export default function SchemeDetailScreen() {
         },
         { merge: true }
       );
-
       await logEvent("scheme_listen_detail_page", {
         schemeId: scheme.id,
         title: scheme.title,
@@ -204,11 +435,9 @@ export default function SchemeDetailScreen() {
     }
   };
 
-  // On mount / when auth or scheme loaded: track view
-  // Only if we did NOT already track on list page
   useEffect(() => {
     if (!scheme || !fbUser) return;
-    if (fromList) return; // already tracked in SchemesScreen
+    if (fromList) return;
     trackViewFromDetail();
   }, [scheme, fbUser, fromList]);
 
@@ -217,11 +446,10 @@ export default function SchemeDetailScreen() {
     await trackListenFromDetail();
   };
 
-  // If scheme not found, show simple error state
+  // If scheme not found
   if (!scheme) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-blue-50 flex flex-col">
-        {/* Navbar (simplified) */}
         <header className="w-full bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
             <button
@@ -246,8 +474,8 @@ export default function SchemeDetailScreen() {
               Scheme not found
             </h1>
             <p className="text-sm text-slate-600 mb-4">
-              The scheme you are trying to view does not exist or the link may be
-              incorrect.
+              The scheme you are trying to view does not exist or the link may
+              be incorrect.
             </p>
             <button
               type="button"
@@ -265,10 +493,9 @@ export default function SchemeDetailScreen() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-blue-50 flex flex-col">
-      {/* Navbar (same style as SchemesScreen) */}
+      {/* ── Navbar ── */}
       <header className="w-full bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-          {/* Logo + Brand */}
           <button
             type="button"
             onClick={goHome}
@@ -283,7 +510,6 @@ export default function SchemeDetailScreen() {
             </span>
           </button>
 
-          {/* Nav links */}
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
             <button
               type="button"
@@ -294,7 +520,6 @@ export default function SchemeDetailScreen() {
               Home
             </button>
 
-            {/* Active: Schemes */}
             <button
               type="button"
               onClick={goSchemes}
@@ -333,7 +558,6 @@ export default function SchemeDetailScreen() {
             </button>
           </nav>
 
-          {/* Right: bell + profile dropdown */}
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -373,9 +597,7 @@ export default function SchemeDetailScreen() {
                       {email || "Not signed in"}
                     </p>
                   </div>
-
                   <div className="h-px bg-gray-100" />
-
                   {fbUser ? (
                     <button
                       type="button"
@@ -401,9 +623,8 @@ export default function SchemeDetailScreen() {
         </div>
       </header>
 
-      {/* Page content */}
+      {/* ── Page Content ── */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-        {/* Back + breadcrumb */}
         <button
           type="button"
           onClick={goSchemes}
@@ -434,6 +655,13 @@ export default function SchemeDetailScreen() {
                     ✅ Verified
                   </span>
                 )}
+
+                {hasVideo && (
+                  <span className="text-[11px] font-extrabold tracking-wide px-2 py-1 rounded-full bg-red-50 text-red-600 border border-red-100 inline-flex items-center gap-1">
+                    <Play className="h-3 w-3" fill="currentColor" />
+                    Video Available
+                  </span>
+                )}
               </div>
 
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
@@ -441,7 +669,9 @@ export default function SchemeDetailScreen() {
               </h1>
 
               {schemeTypeLabel && (
-                <p className="text-sm text-slate-600 mt-1">{schemeTypeLabel}</p>
+                <p className="text-sm text-slate-600 mt-1">
+                  {schemeTypeLabel}
+                </p>
               )}
 
               <p className="text-sm text-slate-600 mt-3 max-w-2xl">
@@ -478,10 +708,13 @@ export default function SchemeDetailScreen() {
           </div>
         </div>
 
-        {/* Main layout: details + sidebar */}
+        {/* ── Main layout: details + sidebar ── */}
         <div className="grid gap-6 lg:grid-cols-[2.3fr,1.1fr]">
-          {/* LEFT: Detailed sections */}
+          {/* LEFT */}
           <div className="space-y-5">
+            {/* ★ YouTube Video Section */}
+            <YouTubeVideoSection schemeId={scheme.id} />
+
             <DetailSection title="What you get">
               <BulletList items={details.whatYouGet} />
             </DetailSection>
@@ -524,16 +757,16 @@ export default function SchemeDetailScreen() {
 
             <DetailSection title="Disclaimer">
               <p className="text-xs text-slate-500">
-                This is a simplified, informational overview. Eligibility, benefits,
-                amounts, interest rates and rules can change and may vary between
-                states, banks and over time. Always confirm latest details from
-                official Government / bank / post office sources or a qualified
-                advisor before taking action.
+                This is a simplified, informational overview. Eligibility,
+                benefits, amounts, interest rates and rules can change and may
+                vary between states, banks and over time. Always confirm latest
+                details from official Government / bank / post office sources or
+                a qualified advisor before taking action.
               </p>
             </DetailSection>
           </div>
 
-          {/* RIGHT: Quick summary sidebar */}
+          {/* RIGHT: Sidebar */}
           <aside className="space-y-5">
             <div className="bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl p-5 shadow-[0_16px_40px_rgba(15,23,42,0.06)]">
               <h4 className="font-bold text-slate-900 mb-3">Quick summary</h4>
@@ -573,26 +806,30 @@ export default function SchemeDetailScreen() {
               </div>
             </div>
 
+            {/* Sidebar Video Card */}
+            <SidebarVideoCard schemeId={scheme.id} />
+
             <div className="bg-amber-50/90 backdrop-blur border border-amber-200 rounded-3xl p-5">
               <div className="flex items-center gap-2 mb-2">
                 <span>🛡️</span>
                 <h4 className="font-bold text-amber-900">Safety reminder</h4>
               </div>
               <p className="text-sm text-amber-900/80 leading-relaxed">
-                DhanSaathi will never ask for your bank OTP, PIN, or password over
-                voice or chat. Apply only through official Government websites,
-                trusted bank/post office branches or authorised agents.
+                DhanSaathi will never ask for your bank OTP, PIN, or password
+                over voice or chat. Apply only through official Government
+                websites, trusted bank/post office branches or authorised
+                agents.
               </p>
             </div>
           </aside>
         </div>
       </main>
 
-      {/* Bottom right voice widget + mic button */}
+      {/* Bottom right voice widget */}
       <div className="fixed bottom-6 right-6 flex items-end gap-3">
         <div className="hidden md:block bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl px-4 py-3 shadow-[0_18px_45px_rgba(15,23,42,0.10)]">
           <p className="text-sm text-slate-700">
-            “Ask me: who can apply for this scheme?”
+            "Ask me: who can apply for this scheme?"
           </p>
         </div>
 

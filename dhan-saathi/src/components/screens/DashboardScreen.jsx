@@ -33,22 +33,200 @@ import {
   Volume2,
   Users,
   Calendar,
+  Globe,
 } from "lucide-react";
+
+// Bilingual content
+const DASHBOARD_TEXT = {
+  hindi: {
+    // Navbar
+    appName: "धनसाथी",
+    home: "होम",
+    schemes: "सरकारी योजनाएं",
+    community: "समुदाय",
+    learn: "सीखें",
+    help: "सहायता",
+    notifications: "सूचनाएं",
+    logout: "लॉग आउट",
+    signin: "साइन इन",
+    
+    // Greeting Section
+    namaste: "नमस्ते",
+    welcome: "आपके डैशबोर्ड में स्वागत है",
+    firstTime: "नए उपयोगकर्ता 0 से शुरू करते हैं। आपके डैशबोर्ड में गतिविधि बढ़ने के साथ विकसित होता है।",
+    
+    // Features Grid
+    features: [
+      {
+        title: "योजनाएं",
+        subtitle: "सरकारी लाभ और सब्सिडी",
+        icon: Building2,
+      },
+      {
+        title: "स्कैम जांचें",
+        subtitle: "संदिग्ध संदेशों की जाँच करें",
+        icon: ShieldCheck,
+      },
+      {
+        title: "ट्रैकर",
+        subtitle: "दैनिक खर्च मॉनिटर",
+        icon: BarChart3,
+      },
+      {
+        title: "AI से पूछें",
+        subtitle: "वित्तीय वॉयस सहायक",
+        icon: MessageSquare,
+      },
+      {
+        title: "सीखें",
+        subtitle: "वित्तीय साक्षरता पाठ्यक्रम",
+        icon: BookOpen,
+      },
+      {
+        title: "सुरक्षा",
+        subtitle: "सुरक्षित दस्तावेज़ वॉल्ट",
+        icon: ShieldCheck,
+      },
+      {
+        title: "प्रोफाइल",
+        subtitle: "खाता सेटिंग्स प्रबंधित करें",
+        icon: UserCog,
+      },
+    ],
+    
+    // Recent Schemes
+    recentSchemes: "हाल की योजनाएं",
+    explore: "अन्वेषण करें →",
+    noSchemes: "अभी तक कोई योजना नहीं देखी गई। शुरू करने के लिए",
+    schemesLink: "योजनाएं",
+    open: "खोलें",
+    
+    // Community Insights
+    communityInsights: "समुदाय जानकारी",
+    communityDesc: "अपनी गतिविधि के आधार पर जानकारी देखने के लिए योजनाओं का अन्वेषण शुरू करें।",
+    goToCommunity: "समुदाय पर जाएं →",
+    
+    // Today's Tip
+    todaysTip: "आज का टिप",
+    tipText: "प्रतिदिन सिर्फ ₹50 बचाने से समय के साथ आपातकालीन कोष बनाने में मदद मिल सकती है।",
+    listenTip: "टिप सुनें",
+    
+    // Reminders
+    reminders: "रिमाइंडर्स",
+    noReminders: "अभी तक कोई रिमाइंडर नहीं है।",
+    addReminder: "रिमाइंडर जोड़ें →",
+    
+    // Daily Goal
+    dailyGoal: "दैनिक लक्ष्य",
+    actions: "क्रियाएं",
+    goalDesc: "अपना दैनिक लक्ष्य पूरा करने के लिए योजनाओं को देखें या सुनें।",
+    
+    // Voice Assistant
+    voiceAssistant: "वॉयस सहायक",
+  },
+  english: {
+    // Navbar
+    appName: "DhanSaathi",
+    home: "Home",
+    schemes: "Schemes",
+    community: "Community",
+    learn: "Learn",
+    help: "Help",
+    notifications: "Notifications",
+    logout: "Logout",
+    signin: "Sign in",
+    
+    // Greeting Section
+    namaste: "Namaste",
+    welcome: "Welcome to your dashboard",
+    firstTime: "First-time users start at 0. Your dashboard grows as you explore.",
+    
+    // Features Grid
+    features: [
+      {
+        title: "Schemes",
+        subtitle: "Govt Benefits & Subsidies",
+        icon: Building2,
+      },
+      {
+        title: "Verify Scam",
+        subtitle: "Check suspicious messages",
+        icon: ShieldCheck,
+      },
+      {
+        title: "Tracker",
+        subtitle: "Daily Expense Monitor",
+        icon: BarChart3,
+      },
+      {
+        title: "Ask AI",
+        subtitle: "Financial Voice Assistant",
+        icon: MessageSquare,
+      },
+      {
+        title: "Learn",
+        subtitle: "Financial Literacy Courses",
+        icon: BookOpen,
+      },
+      {
+        title: "Profile",
+        subtitle: "Manage Account Settings",
+        icon: UserCog,
+        
+      },
+    ],
+    
+    // Recent Schemes
+    recentSchemes: "Recent Schemes",
+    explore: "Explore →",
+    noSchemes: "No schemes viewed yet. Open",
+    schemesLink: "Schemes",
+    open: "to start.",
+    
+    // Community Insights
+    communityInsights: "Community Insights",
+    communityDesc: "Start exploring schemes to see insights based on your activity.",
+    goToCommunity: "Go to Community →",
+    
+    // Today's Tip
+    todaysTip: "Today's Tip",
+    tipText: "Saving just ₹50 a day can help you build an emergency fund over time.",
+    listenTip: "Listen to Tip",
+    
+    // Reminders
+    reminders: "Reminders",
+    noReminders: "No reminders yet.",
+    addReminder: "Add a reminder →",
+    
+    // Daily Goal
+    dailyGoal: "Daily Goal",
+    actions: "actions",
+    goalDesc: "View or listen to schemes to complete your daily goal.",
+    
+    // Voice Assistant
+    voiceAssistant: "Voice assistant",
+  }
+};
 
 const DashboardScreen = () => {
   const navigate = useNavigate();
 
+  // Get user's language preference
+  const userLanguage = localStorage.getItem('dhan-saathi-language') || 'english';
+  const t = DASHBOARD_TEXT[userLanguage];
+  
   // navigation
   const goHome = () => navigate("/home");
   const goToSchemes = () => navigate("/schemes");
   const goToCommunity = () => navigate("/community");
-  const goToVerify = () => navigate("/verify-scheme"); // NEW: navigate to verification screen
+  const goToVerify = () => navigate("/verify-scheme");
 
   // auth + firestore
   const [fbUser, setFbUser] = useState(null);
   const [userDoc, setUserDoc] = useState(null);
   const [recentSchemes, setRecentSchemes] = useState([]);
   const [reminders, setReminders] = useState([]);
+  const [language, setLanguage] = useState(userLanguage);
 
   // profile dropdown
   const [menuOpen, setMenuOpen] = useState(false);
@@ -169,9 +347,11 @@ const DashboardScreen = () => {
     try {
       window.speechSynthesis.cancel();
       const msg = new SpeechSynthesisUtterance(
-        "Saving just fifty rupees daily can help build a strong emergency fund over time."
+        language === 'hindi' 
+          ? "प्रतिदिन सिर्फ पचास रुपये बचाने से समय के साथ मजबूत आपातकालीन कोष बनाने में मदद मिल सकती है।"
+          : "Saving just fifty rupees daily can help build a strong emergency fund over time."
       );
-      msg.lang = "en-IN";
+      msg.lang = language === 'hindi' ? 'hi-IN' : 'en-IN';
       window.speechSynthesis.speak(msg);
     } catch {}
   };
@@ -183,8 +363,15 @@ const DashboardScreen = () => {
       navigate("/signup", { replace: true });
     } catch (e) {
       console.error(e);
-      alert("Logout failed");
+      alert(language === 'hindi' ? "लॉगआउट विफल हुआ" : "Logout failed");
     }
+  };
+
+  // Toggle language
+  const toggleLanguage = () => {
+    const newLang = language === 'hindi' ? 'english' : 'hindi';
+    setLanguage(newLang);
+    localStorage.setItem('dhan-saathi-language', newLang);
   };
 
   // Firestore event logger
@@ -245,50 +432,23 @@ const DashboardScreen = () => {
     navigate(`/schemes/${scheme.schemeId}`);
   };
 
-  const features = [
-    {
-      title: "Schemes",
-      subtitle: "Govt Benefits & Subsidies",
-      icon: Building2,
-      onClick: goToSchemes,
-    },
-    {
-      title: "Verify Scam", // NEW CARD
-      subtitle: "Check suspicious messages",
-      icon: ShieldCheck,
-      onClick: goToVerify,
-    },
-    {
-      title: "Tracker",
-      subtitle: "Daily Expense Monitor",
-      icon: BarChart3,
-      onClick: () => navigate("/tracker"),
-    },
-    {
-      title: "Ask AI",
-      subtitle: "Financial Voice Assistant",
-      icon: MessageSquare,
-      onClick: () => navigate("/ask-ai"),
-    },
-    {
-      title: "Learn",
-      subtitle: "Financial Literacy Courses",
-      icon: BookOpen,
-      onClick: () => alert("Learn coming soon"),
-    },
-    {
-      title: "Safety",
-      subtitle: "Secure Document Vault",
-      icon: ShieldCheck,
-      onClick: () => alert("Safety coming soon"),
-    },
-    {
-      title: "Profile",
-      subtitle: "Manage Account Settings",
-      icon: UserCog,
-      onClick: () => alert("Profile coming soon"),
-    },
-  ];
+  const features = t.features.map((f, index) => {
+    const icon = f.icon;
+    const onClickMap = [
+      goToSchemes,
+      goToVerify,
+      () => navigate("/tracker"),
+      () => navigate("/ask-ai"),
+      () => navigate("/learn"),
+      () => navigate("/profile"),
+    ];
+    
+    return {
+      ...f,
+      icon,
+      onClick: onClickMap[index],
+    };
+  });
 
   return (
     <>
@@ -317,6 +477,10 @@ const DashboardScreen = () => {
           70% { transform: scale(1.25); opacity: 0; }
           100% { transform: scale(1.25); opacity: 0; }
         }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+        }
       `}</style>
 
       <div
@@ -343,7 +507,7 @@ const DashboardScreen = () => {
                 <IndianRupee className="h-5 w-5 text-white" />
               </div>
               <span className="text-xl font-bold tracking-tight text-gray-900">
-                DhanSaathi
+                {t.appName}
               </span>
             </div>
 
@@ -355,7 +519,7 @@ const DashboardScreen = () => {
                 className="relative text-green-700 font-semibold"
               >
                 <Home className="inline h-4 w-4 mr-1.5 -mt-0.5" />
-                Home
+                {t.home}
                 <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-green-600" />
               </button>
 
@@ -365,7 +529,7 @@ const DashboardScreen = () => {
                 className="flex items-center gap-1.5 hover:text-gray-900 transition"
               >
                 <Building2 className="h-4 w-4" />
-                Schemes
+                {t.schemes}
               </button>
 
               <button
@@ -374,35 +538,49 @@ const DashboardScreen = () => {
                 className="flex items-center gap-1.5 hover:text-gray-900 transition"
               >
                 <Sparkle className="h-4 w-4" />
-                Community
+                {t.community}
               </button>
 
               <button
                 type="button"
                 className="flex items-center gap-1.5 hover:text-gray-900 transition"
-                onClick={() => alert("Learn coming soon")}
+                onClick={() => navigate("/learn")}
               >
                 <BookOpen className="h-4 w-4" />
-                Learn
+                {t.learn}
               </button>
 
               <button
                 type="button"
                 className="flex items-center gap-1.5 hover:text-gray-900 transition"
-                onClick={() => alert("Help coming soon")}
+                onClick={() => navigate("/help")}
               >
                 <MessageSquare className="h-4 w-4" />
-                Help
+                {t.help}
               </button>
             </nav>
 
-            {/* Right side: bell + profile */}
+            {/* Right side: language toggle + bell + profile */}
             <div className="flex items-center gap-3">
+              {/* Language Toggle Button */}
+              <button
+                type="button"
+                onClick={toggleLanguage}
+                className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow-sm text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
+                title={language === 'hindi' ? "Switch to English" : "Switch to Hindi"}
+              >
+                <Globe className="h-4 w-4" />
+                <span className="text-xs font-medium">
+                  {language === 'hindi' ? 'हिंदी' : 'English'}
+                </span>
+                <span className="text-xs text-gray-500">⇄</span>
+              </button>
+
               <button
                 type="button"
                 className="hidden sm:inline-flex h-10 w-10 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow-sm items-center justify-center text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
-                title="Notifications"
-                onClick={() => alert("Notifications coming soon")}
+                title={t.notifications}
+                onClick={() => alert(language === 'hindi' ? "जल्द ही आ रहा है" : "Notifications coming soon")}
               >
                 <Bell className="h-5 w-5" />
               </button>
@@ -437,8 +615,21 @@ const DashboardScreen = () => {
                       {displayName}
                     </p>
                     <p className="text-xs text-gray-600 mt-1 break-all">
-                      {email || "Not signed in"}
+                      {email || (language === 'hindi' ? "साइन इन नहीं किया गया" : "Not signed in")}
                     </p>
+                  </div>
+
+                  <div className="h-px bg-gray-100" />
+
+                  <div className="p-2">
+                    <button
+                      type="button"
+                      onClick={toggleLanguage}
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Globe className="h-4 w-4 text-green-600" />
+                      {language === 'hindi' ? 'Switch to English' : 'हिंदी में बदलें'}
+                    </button>
                   </div>
 
                   <div className="h-px bg-gray-100" />
@@ -450,7 +641,7 @@ const DashboardScreen = () => {
                       onClick={handleLogout}
                     >
                       <LogOut className="h-4 w-4" />
-                      Logout
+                      {t.logout}
                     </button>
                   ) : (
                     <button
@@ -458,7 +649,7 @@ const DashboardScreen = () => {
                       className="w-full px-4 py-3 text-left text-sm text-green-700 hover:bg-green-50"
                       onClick={() => navigate("/signup")}
                     >
-                      Sign in
+                      {t.signin}
                     </button>
                   )}
                 </div>
@@ -472,42 +663,57 @@ const DashboardScreen = () => {
           <div className="grid gap-6 lg:grid-cols-[2.1fr,1fr]">
             {/* LEFT COLUMN */}
             <section className="space-y-6 lg:space-y-8">
-              {/* Greeting + Stats (with sheen) */}
+              {/* Greeting Section - Updated Typography */}
               <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur-xl border border-gray-200 shadow-[0_28px_80px_rgba(15,23,42,0.12)] p-6 sm:p-8">
                 {/* sheen overlay */}
                 <div className="pointer-events-none absolute inset-0">
                   <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/70 to-transparent blur-xl animate-[sheen_8s_ease-in-out_infinite]" />
                 </div>
 
-                <div className="relative space-y-3">
-                  <p className="text-sm font-semibold uppercase tracking-wide text-green-700">
-                    Namaste, {displayName}!
-                  </p>
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                    Welcome to your dashboard
-                  </h1>
-                  <p className="text-base text-gray-600">
-                    First-time users start at 0. Your dashboard grows as you explore.
-                  </p>
-                </div>
+                <div className="relative space-y-4">
+                  {/* Greeting Line */}
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                      <span className="text-lg font-bold text-green-700">
+                        {displayName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">
+                        {t.namaste}
+                      </p>
+                      <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
+                        {displayName}
+                      </h1>
+                    </div>
+                  </div>
 
-                <div className="relative mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-2xl bg-green-50/90 border border-green-100 p-4 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
-                    <p className="text-xs font-semibold text-green-800">
-                      Schemes Viewed
-                    </p>
-                    <p className="text-2xl font-extrabold text-gray-900 mt-1">
-                      {stats.schemesViewed || 0}
+                  {/* Main Welcome Message */}
+                  <div>
+                    <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
+                      {t.welcome}
+                    </h2>
+                    <p className="text-lg text-gray-600 mt-3 max-w-2xl">
+                      {t.firstTime}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-emerald-50/90 border border-emerald-100 p-4 hover:-translate-y-0.5 transition-all shadow-sm hover:shadow-md">
-                    <p className="text-xs font-semibold text-emerald-800">
-                      Schemes Listened
-                    </p>
-                    <p className="text-2xl font-extrabold text-gray-900 mt-1">
-                      {stats.schemesListened || 0}
-                    </p>
+                  {/* Progress Indicator */}
+                  <div className="pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        Daily Progress
+                      </span>
+                      <span className="text-sm font-bold text-green-700">
+                        {dailyProgressPct}%
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${dailyProgressPct}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -539,21 +745,21 @@ const DashboardScreen = () => {
               <div className="rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-lg p-6 hover:shadow-xl transition-all">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Recent Schemes
+                    {t.recentSchemes}
                   </h2>
                   <button
                     type="button"
                     onClick={goToSchemes}
                     className="text-sm font-medium text-green-700 hover:text-green-800"
                   >
-                    Explore →
+                    {t.explore}
                   </button>
                 </div>
 
                 {recentSchemes.length === 0 ? (
                   <p className="text-gray-600">
-                    No schemes viewed yet. Open{" "}
-                    <span className="font-semibold">Schemes</span> to start.
+                    {t.noSchemes}{" "}
+                    <span className="font-semibold">{t.schemesLink}</span> {t.open}
                   </p>
                 ) : (
                   <div className="space-y-3 mt-4">
@@ -580,22 +786,22 @@ const DashboardScreen = () => {
               {/* Community Insights */}
               <div className="rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-lg p-6 hover:shadow-xl transition-all">
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">
-                  Community Insights
+                  {t.communityInsights}
                 </h2>
                 <div className="flex items-start gap-4">
-                  <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center">
+                  <div className="h-12 w-12 rounded-xl bg-green-100 flex items-center justify-center animate-float">
                     <Users className="h-6 w-6 text-green-700" />
                   </div>
                   <div>
                     <p className="text-gray-800">
-                      Start exploring schemes to see insights based on your activity.
+                      {t.communityDesc}
                     </p>
                     <button
                       type="button"
                       onClick={goToCommunity}
                       className="mt-2 text-sm font-medium text-green-700 hover:text-green-800"
                     >
-                      Go to Community →
+                      {t.goToCommunity}
                     </button>
                   </div>
                 </div>
@@ -608,37 +814,37 @@ const DashboardScreen = () => {
               <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-gray-200 shadow-xl p-6 hover:shadow-2xl transition-all">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Today's Tip
+                    {t.todaysTip}
                   </h2>
-                <Lightbulb className="h-7 w-7 text-amber-500" />
+                  <Lightbulb className="h-7 w-7 text-amber-500" />
                 </div>
                 <p className="text-gray-700">
-                  Saving just ₹50 a day can help you build an emergency fund over time.
+                  {t.tipText}
                 </p>
                 <button
                   type="button"
                   onClick={speakTip}
                   className="mt-4 text-sm font-medium text-emerald-700 hover:text-emerald-800 flex items-center gap-1.5 hover:-translate-y-0.5 transition"
                 >
-                  <Volume2 className="h-4 w-4" /> Listen to Tip
+                  <Volume2 className="h-4 w-4" /> {t.listenTip}
                 </button>
               </div>
 
               {/* Reminders */}
               <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-gray-200 shadow-xl p-6 hover:shadow-2xl transition-all">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Reminders
+                  {t.reminders}
                 </h2>
 
                 {reminders.length === 0 ? (
                   <div className="text-gray-600">
-                    <p>No reminders yet.</p>
+                    <p>{t.noReminders}</p>
                     <button
                       type="button"
-                      onClick={() => alert("Add Reminder coming soon")}
+                      onClick={() => alert(language === 'hindi' ? "जल्द ही आ रहा है" : "Add Reminder coming soon")}
                       className="mt-3 text-sm font-medium text-green-700 hover:text-green-800"
                     >
-                      Add a reminder →
+                      {t.addReminder}
                     </button>
                   </div>
                 ) : (
@@ -652,7 +858,7 @@ const DashboardScreen = () => {
                           <Calendar className="h-6 w-6 text-blue-600" />
                           <div>
                             <p className="font-medium text-gray-900">
-                              {r.title || "Reminder"}
+                              {r.title || t.reminders}
                             </p>
                             <p className="text-sm text-gray-600">
                               {r.note || "—"}
@@ -668,7 +874,7 @@ const DashboardScreen = () => {
               {/* Daily Goal */}
               <div className="rounded-3xl bg-white/85 backdrop-blur-xl border border-gray-200 shadow-xl p-6 hover:shadow-2xl transition-all">
                 <h2 className="text-lg font-semibold text-gray-900 mb-5">
-                  Daily Goal
+                  {t.dailyGoal}
                 </h2>
 
                 <div className="flex items-center gap-4">
@@ -696,13 +902,37 @@ const DashboardScreen = () => {
 
                   <div>
                     <p className="text-sm font-semibold text-gray-900">
-                      {dailyProgressRaw}/{dailyTarget} actions
+                      {dailyProgressRaw}/{dailyTarget} {t.actions}
                     </p>
                     <p className="text-xs text-gray-600 mt-1">
-                      View or listen to schemes to complete your daily goal.
+                      {t.goalDesc}
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Language Info Card */}
+              <div className="rounded-3xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100 shadow-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    <Globe className="h-5 w-5 text-emerald-700" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">
+                      {language === 'hindi' ? 'भाषा: हिंदी' : 'Language: English'}
+                    </h3>
+                    <p className="text-xs text-gray-600">
+                      {language === 'hindi' ? 'पूरा ऐप हिंदी में' : 'Full app in English'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={toggleLanguage}
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition hover:-translate-y-0.5"
+                >
+                  {language === 'hindi' ? 'Switch to English' : 'हिंदी में बदलें'}
+                </button>
               </div>
             </section>
           </div>
@@ -716,9 +946,9 @@ const DashboardScreen = () => {
           />
           <button
             className="relative h-16 w-16 rounded-full bg-green-600 shadow-2xl flex items-center justify-center text-white hover:bg-green-700 transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
-            aria-label="Voice assistant"
+            aria-label={t.voiceAssistant}
             type="button"
-            onClick={() => alert("Voice assistant coming soon")}
+            onClick={() => alert(language === 'hindi' ? "जल्द ही आ रहा है" : "Voice assistant coming soon")}
           >
             <Mic className="h-7 w-7" />
           </button>

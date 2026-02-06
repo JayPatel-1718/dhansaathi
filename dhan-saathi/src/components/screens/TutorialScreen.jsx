@@ -1,160 +1,322 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// src/components/screens/TutorialScreen.jsx
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Mic,
+  Volume2,
+  ArrowRight,
+  ChevronLeft,
+  ChevronRight,
+  UserRound,
+  FileText,
+  Bot,
+  Users,
+  PhoneCall,
+  IndianRupee,
+} from "lucide-react";
 
-const TutorialScreen = () => {
+export default function TutorialScreen() {
   const navigate = useNavigate();
-  const [selectedLanguage, setSelectedLanguage] = useState('english');
+
+  // language + voice
+  const [selectedLanguage, setSelectedLanguage] = useState("english");
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    const lang = localStorage.getItem('dhan-saathi-language') || 'hindi';
+    const lang = localStorage.getItem("dhan-saathi-language") || "hindi";
     setSelectedLanguage(lang);
-
-    const done = localStorage.getItem('dhan-saathi-tutorial-completed');
-    if (done === 'true') {
-      navigate('/home', { replace: true });
-    }
-  }, [navigate]);
-
-  const langCode = useMemo(() => {
-    if (selectedLanguage === 'hindi') return 'hi-IN';
-    if (selectedLanguage === 'tamil') return 'ta-IN';
-    if (selectedLanguage === 'telugu') return 'te-IN';
-    return 'en-IN';
-  }, [selectedLanguage]);
+  }, []);
 
   const speak = (text) => {
     try {
       window.speechSynthesis.cancel();
       const msg = new SpeechSynthesisUtterance(text);
-      msg.lang = langCode;
+      if (selectedLanguage === "hindi") msg.lang = "hi-IN";
+      else if (selectedLanguage === "tamil") msg.lang = "ta-IN";
+      else if (selectedLanguage === "telugu") msg.lang = "te-IN";
+      else msg.lang = "en-IN";
       window.speechSynthesis.speak(msg);
     } catch {
-      // silent fail
+      // ignore
     }
   };
 
-  const isHindi = selectedLanguage === 'hindi';
-
-  const tutorialSteps = useMemo(
+  // STEP CONTENT (English text kept simple; TTS can still speak local language)
+  const steps = useMemo(
     () => [
       {
         id: 1,
-        icon: '🎤',
-        title: isHindi ? 'माइक दबाकर बोलें' : 'Press mic to speak',
-        description: isHindi
-          ? 'Talk to DhanSaathi in your preferred language for any financial query or help.'
-          : 'Talk to DhanSaathi in your preferred language for any financial query or help.',
-        listenText: isHindi ? 'सुनें निर्देश' : 'Listen to Instruction',
+        title: "Add your basic details",
+        description:
+          "Tell DhanSaathi simple things about you, like your age, work and goals, so we can guide you better.",
+        icon: (
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#6EE830] to-emerald-400 flex items-center justify-center shadow-md">
+            <UserRound className="h-7 w-7 text-white" />
+          </div>
+        ),
       },
       {
         id: 2,
-        icon: '🏦',
-        title: isHindi ? 'योजनाएं और फायदे देखें' : 'See schemes & benefits',
-        description: isHindi
-          ? 'Discover government schemes tailored specifically to your profile and eligibility.'
-          : 'Discover government schemes tailored specifically to your profile and eligibility.',
-        listenText: isHindi ? 'सुनें निर्देश' : 'Listen to Instruction',
+        title: "Explore government schemes",
+        description:
+          "See government and bank schemes in one place. Find what matches your family, farming, business or savings.",
+        icon: (
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-lime-300 flex items-center justify-center shadow-md">
+            <FileText className="h-7 w-7 text-white" />
+          </div>
+        ),
       },
       {
         id: 3,
-        icon: '❓',
-        title: isHindi ? 'कभी भी मदद पाएं' : 'Get help anytime',
-        description: isHindi
-          ? 'Ask questions about banking, savings, or insurance easily with instant answers.'
-          : 'Ask questions about banking, savings, or insurance easily with instant answers.',
-        listenText: isHindi ? 'सुनें निर्देश' : 'Listen to Instruction',
+        title: "Get instant AI guidance",
+        description:
+          "Our AI assistant checks basic eligibility and explains schemes in simple, clear language for you.",
+        icon: (
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#6EE830] to-green-500 flex items-center justify-center shadow-md">
+            <Bot className="h-7 w-7 text-white" />
+          </div>
+        ),
+      },
+      {
+        id: 4,
+        title: "Learn from the community",
+        description:
+          "Ask questions, read real stories and learn from other families, farmers and small business owners.",
+        icon: (
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-sky-400 flex items-center justify-center shadow-md">
+            <Users className="h-7 w-7 text-white" />
+          </div>
+        ),
+      },
+      {
+        id: 5,
+        title: "Get help anytime",
+        description:
+          "If you feel confused, you can always ask DhanSaathi or call for support. You are never alone.",
+        icon: (
+          <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-lime-400 to-emerald-500 flex items-center justify-center shadow-md">
+            <PhoneCall className="h-7 w-7 text-white" />
+          </div>
+        ),
       },
     ],
-    [isHindi]
+    []
   );
 
-  const handleGetStarted = () => {
-    localStorage.setItem('dhan-saathi-tutorial-completed', 'true');
-    navigate('/home', { replace: true });
+  const totalSteps = steps.length;
+  const step = steps[currentStep];
+
+  const handleListen = () => {
+    const textToSpeak = `${step.title}. ${step.description}`;
+    speak(textToSpeak);
   };
 
-  const handleSkip = () => {
-    localStorage.setItem('dhan-saathi-tutorial-completed', 'true');
-    navigate('/home', { replace: true });
+  const handleFinish = () => {
+    // mark tutorial completed so you can skip for existing users
+    localStorage.setItem("dhan-saathi-tutorial-completed", "true");
+
+    const userType = localStorage.getItem("dhan-saathi-user-type");
+    // simple routing rule: registered users go to voice setup, guests to home
+    if (userType === "guest") {
+      navigate("/home", { replace: true });
+    } else {
+      navigate("/voice-setup", { replace: true });
+    }
+  };
+
+  const handleNext = () => {
+    if (currentStep < totalSteps - 1) {
+      setCurrentStep((s) => s + 1);
+    } else {
+      handleFinish();
+    }
+  };
+
+  const handlePrev = () => {
+    if (currentStep > 0) {
+      setCurrentStep((s) => s - 1);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 flex flex-col items-center px-5 sm:px-6 pt-8 pb-10">
-      {/* Header / Title area */}
-      <div className="w-full max-w-5xl text-center mb-10">
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-3">
-          {isHindi ? 'DhanSaathi कैसे इस्तेमाल करें' : 'How to use DhanSaathi'}
-        </h1>
-        <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-          {isHindi
-            ? 'आपका voice-first financial साथी। सरल वॉइस कमांड्स से अपनी फाइनेंस को आसानी से मैनेज करें।'
-            : 'Your voice-first financial companion. Learn how to navigate your finances using simple voice commands and personalized insights.'}
-        </p>
-      </div>
+    <>
+      {/* Custom animations / gradients */}
+      <style>{`
+        @keyframes bubbleFloatA {
+          0% { transform: translate(0px,0px) scale(1); opacity: 0.75; }
+          50% { transform: translate(18px,-16px) scale(1.08); opacity: 1; }
+          100% { transform: translate(0px,0px) scale(1); opacity: 0.75; }
+        }
+        @keyframes bubbleFloatB {
+          0% { transform: translate(0px,0px) scale(1); opacity: 0.65; }
+          50% { transform: translate(-16px,18px) scale(1.04); opacity: 1; }
+          100% { transform: translate(0px,0px) scale(1); opacity: 0.65; }
+        }
+        @keyframes micGlow {
+          0% { box-shadow: 0 0 0 0 rgba(110,232,48,0.4); }
+          70% { box-shadow: 0 0 0 14px rgba(110,232,48,0); }
+          100% { box-shadow: 0 0 0 0 rgba(110,232,48,0); }
+        }
+      `}</style>
 
-      {/* Horizontal Cards */}
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-12">
-        {tutorialSteps.map((step) => (
-          <div
-            key={step.id}
-            className="bg-white rounded-3xl shadow-lg p-6 md:p-8 border border-gray-100 text-center flex flex-col items-center transition-transform hover:scale-105"
-          >
-            <div className="w-20 h-20 mb-6 rounded-full bg-green-100 flex items-center justify-center text-5xl shadow-sm">
-              {step.icon}
+      <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#f4ffe9] via-white to-[#e9ffe5] relative overflow-hidden">
+        {/* Floating blobs for background */}
+        <div className="pointer-events-none absolute -top-32 -left-32 h-[260px] w-[260px] rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(110,232,48,0.55)_0%,rgba(110,232,48,0.18)_40%,transparent_70%)] blur-2xl animate-[bubbleFloatA_16s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute top-[40%] -right-40 h-[280px] w-[280px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(74,222,128,0.50)_0%,rgba(45,212,191,0.22)_40%,transparent_70%)] blur-2xl animate-[bubbleFloatB_20s_ease-in-out_infinite]" />
+
+        {/* Header */}
+        <header className="px-4 pt-4 pb-3 sm:px-6 sm:pt-6 relative z-10">
+          <div className="max-w-md mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-xl bg-[#6EE830] flex items-center justify-center shadow-md">
+                <IndianRupee className="h-5 w-5 text-white" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-xs uppercase tracking-wide text-gray-500">
+                  DhanSaathi
+                </p>
+                <p className="text-sm font-semibold text-gray-800">
+                  Quick Tutorial
+                </p>
+              </div>
             </div>
 
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-4">{step.title}</h2>
-
-            <p className="text-gray-600 mb-6 text-sm md:text-base leading-relaxed flex-grow">
-              {step.description}
-            </p>
-
-            <button
-              onClick={() => speak(`${step.title}. ${step.description}`)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-green-50 text-green-700 font-semibold rounded-full hover:bg-green-100 transition mt-auto"
-            >
-              <span className="text-xl">🔊</span>
-              {step.listenText}
-            </button>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">
+                Step {currentStep + 1} of {totalSteps}
+              </p>
+              <div className="mt-1 h-1.5 w-24 bg-gray-200/70 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-[#6EE830] to-emerald-500 transition-all duration-300"
+                  style={{
+                    width: `${((currentStep + 1) / totalSteps) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+        </header>
 
-      {/* Carousel dots indicator (optional – centered) */}
-      <div className="flex gap-3 mb-10">
-        <div className="w-3 h-3 rounded-full bg-green-600" />
-        <div className="w-3 h-3 rounded-full bg-gray-300" />
-        <div className="w-3 h-3 rounded-full bg-gray-300" />
-      </div>
+        {/* Main Content */}
+        <main className="flex-1 flex items-stretch px-4 pb-28 sm:px-6 relative z-10">
+          <div className="w-full max-w-md mx-auto flex flex-col justify-center">
+            {/* Glass card */}
+            <div className="relative rounded-3xl bg-white/70 backdrop-blur-2xl border border-white/60 shadow-[0_18px_45px_rgba(22,163,74,0.18)] px-5 py-6 sm:px-6 sm:py-7">
+              {/* step icon + title */}
+              <div className="flex items-start gap-4">
+                {step.icon}
+                <div>
+                  <p className="text-xs font-medium tracking-wide uppercase text-emerald-600">
+                    DhanSaathi in 30 seconds
+                  </p>
+                  <h1 className="mt-1 text-xl sm:text-2xl font-bold text-gray-900">
+                    {step.title}
+                  </h1>
+                </div>
+              </div>
 
-      {/* Action buttons */}
-      <div className="w-full max-w-md flex flex-col items-center gap-5 mb-12">
-        <button
-          onClick={handleGetStarted}
-          className="w-full max-w-xs py-4 bg-green-600 text-white text-lg sm:text-xl font-bold rounded-full shadow-lg hover:bg-green-700 transition active:scale-95"
-        >
-          {isHindi ? 'DhanSaathi इस्तेमाल शुरू करें' : 'Start using DhanSaathi'}
-        </button>
+              {/* description */}
+              <p className="mt-4 text-sm sm:text-base text-gray-700 leading-relaxed">
+                {step.description}
+              </p>
 
-        <button
-          onClick={handleSkip}
-          className="text-gray-500 font-medium hover:text-gray-700 underline text-base"
-        >
-          {isHindi ? 'Skip for now' : 'Skip for now'}
-        </button>
-      </div>
+              {/* Listen row */}
+              <div className="mt-5 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handleListen}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-700 text-sm font-semibold border border-emerald-100 shadow-sm hover:bg-emerald-100/80 transition"
+                >
+                  <Volume2 className="h-4 w-4" />
+                  Listen
+                </button>
 
-      {/* Footer */}
-      <div className="text-center text-sm text-gray-500 mt-auto">
-        <p className="mb-3">© 2024 DhanSaathi. Empowering your financial future.</p>
-        <div className="flex justify-center gap-6 flex-wrap">
-          <a href="#" className="hover:text-green-700">Terms of Service</a>
-          <a href="#" className="hover:text-green-700">Privacy Policy</a>
-          <a href="#" className="hover:text-green-700">Support</a>
+                <p className="text-[11px] text-gray-500 text-right leading-snug">
+                  Tap “Listen” if reading is difficult. DhanSaathi will speak
+                  this step aloud.
+                </p>
+              </div>
+
+              {/* Bottom nav buttons (Prev / Next or Get Started) */}
+              <div className="mt-6 flex items-center justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  disabled={currentStep === 0}
+                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-medium border transition ${
+                    currentStep === 0
+                      ? "border-gray-200 text-gray-300 cursor-default"
+                      : "border-gray-200 text-gray-600 bg-white/70 hover:bg-gray-50"
+                  }`}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Back
+                </button>
+
+                {currentStep < totalSteps - 1 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="ml-auto inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#6EE830] to-emerald-500 shadow-md hover:shadow-lg hover:translate-y-[-1px] transition"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleFinish}
+                    className="ml-auto inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold text-white bg-gradient-to-r from-[#6EE830] via-lime-400 to-emerald-500 shadow-md hover:shadow-lg hover:translate-y-[-1px] transition"
+                  >
+                    Get Started
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Step dots */}
+              <div className="mt-5 flex items-center justify-center gap-2">
+                {steps.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setCurrentStep(idx)}
+                    className={`h-2.5 rounded-full transition-all ${
+                      idx === currentStep
+                        ? "w-6 bg-gradient-to-r from-[#6EE830] to-emerald-500"
+                        : "w-1.5 bg-gray-300/80"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Helper text under card */}
+            <p className="mt-4 text-xs text-gray-500 text-center">
+              DhanSaathi will never ask for your bank OTP, UPI PIN, or password.
+            </p>
+          </div>
+        </main>
+
+        {/* Floating mic at bottom center */}
+        <div className="fixed inset-x-0 bottom-4 flex flex-col items-center justify-center pointer-events-none z-20">
+          <button
+            type="button"
+            onClick={() =>
+              speak(
+                "You can use your voice anytime to ask DhanSaathi for help."
+              )
+            }
+            className="pointer-events-auto relative h-16 w-16 rounded-full bg-gradient-to-br from-[#6EE830] via-emerald-400 to-lime-400 flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform"
+            style={{ animation: "micGlow 2s infinite" }}
+          >
+            <Mic className="h-7 w-7" />
+          </button>
+          <p className="mt-2 text-[11px] text-gray-600 font-medium">
+            You can use voice anytime
+          </p>
         </div>
       </div>
-    </div>
+    </>
   );
-};
-
-export default TutorialScreen;
+}

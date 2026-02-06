@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase";
@@ -11,20 +11,20 @@ import {
 } from "../../services/userService";
 
 // ───────────────────── Animated Growth Chart (Premium) ─────────────────────
-const AnimatedGrowthChart = () => (
-  <div className="relative w-[150px] h-[150px]">
+const AnimatedGrowthChart = ({ isMobile }) => (
+  <div className={`relative ${isMobile ? 'w-[120px] h-[120px]' : 'w-[150px] h-[150px]'}`}>
     {/* Soft glow behind */}
-    <div className="absolute inset-0 rounded-[28px] bg-gradient-to-br from-emerald-400/20 via-green-300/10 to-sky-300/10 blur-2xl" />
+    <div className="absolute inset-0 rounded-[24px] sm:rounded-[28px] bg-gradient-to-br from-emerald-400/20 via-green-300/10 to-sky-300/10 blur-2xl" />
 
     {/* Glass tile */}
-    <div className="relative w-full h-full rounded-[28px] border border-white/60 bg-white/55 backdrop-blur-xl shadow-[0_25px_60px_rgba(16,185,129,0.18)] flex items-center justify-center">
+    <div className="relative w-full h-full rounded-[24px] sm:rounded-[28px] border border-white/60 bg-white/55 backdrop-blur-xl shadow-[0_20px_50px_rgba(16,185,129,0.15)] sm:shadow-[0_25px_60px_rgba(16,185,129,0.18)] flex items-center justify-center">
       <svg
-        width="120"
-        height="120"
+        width={isMobile ? "96" : "120"}
+        height={isMobile ? "96" : "120"}
         viewBox="0 0 120 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="drop-shadow-[0_18px_45px_rgba(16,185,129,0.35)]"
+        className="drop-shadow-[0_12px_35px_rgba(16,185,129,0.25)] sm:drop-shadow-[0_18px_45px_rgba(16,185,129,0.35)]"
       >
         {/* faint grid */}
         <g opacity="0.35">
@@ -116,8 +116,8 @@ const AnimatedGrowthChart = () => (
 );
 
 // ───────────────────── Icons ─────────────────────
-const SecureIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const SecureIcon = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M12 3L4 7V11C4 15.4183 7.58172 20 12 21C16.4183 20 20 15.4183 20 11V7L12 3Z"
       stroke="#16a34a"
@@ -135,8 +135,8 @@ const SecureIcon = () => (
   </svg>
 );
 
-const EasyIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const EasyIcon = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M7 10L12 15L17 10"
       stroke="#16a34a"
@@ -148,8 +148,8 @@ const EasyIcon = () => (
   </svg>
 );
 
-const TrustIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const TrustIcon = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
       stroke="#16a34a"
@@ -165,8 +165,8 @@ const TrustIcon = () => (
   </svg>
 );
 
-const VoiceIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const VoiceIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M12 2C10.3431 2 9 3.34315 9 5V12C9 13.6569 10.3431 15 12 15C13.6569 15 15 13.6569 15 12V5C15 3.34315 13.6569 2 12 2Z"
       stroke="#4b5563"
@@ -181,8 +181,8 @@ const VoiceIcon = () => (
   </svg>
 );
 
-const PhoneIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const PhoneIcon = ({ size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M12 17H12.01M8 2H16C17.1046 2 18 2.89543 18 4V20C18 21.1046 17.1046 22 16 22H8C6.89543 22 6 21.1046 6 20V4C6 2.89543 6.89543 2 8 2Z"
       stroke="#4b5563"
@@ -193,8 +193,8 @@ const PhoneIcon = () => (
   </svg>
 );
 
-const GoogleIcon = () => (
-  <svg width="22" height="22" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+const GoogleIcon = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
     <path
       fill="#FFC107"
       d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.2 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.1-.1-2.2-.4-3.5z"
@@ -222,6 +222,18 @@ const SignupScreen = () => {
   const [stepProgress] = useState(50);
   const [selectedLanguage, setSelectedLanguage] = useState("english");
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const lang = localStorage.getItem("dhan-saathi-language") || "hindi";
@@ -342,12 +354,11 @@ const SignupScreen = () => {
     }, 1200);
   };
 
-  const getText = () => {
+  const getText = useMemo(() => {
     if (selectedLanguage === "hindi") {
       return {
         welcome: "आपके विकास में स्वागत है",
-        subtitle:
-          "आपकी रोजमर्रा की जिंदगी के लिए सुरक्षित, आसान और विश्वसनीय वित्तीय उपकरण।",
+        subtitle: "आपकी रोजमर्रा की जिंदगी के लिए सुरक्षित, आसान और विश्वसनीय वित्तीय उपकरण।",
         mobileLogin: "मोबाइल से जुड़ें",
         enterPhone: "अपना मोबाइल नंबर डालें",
         sendOTP: "OTP भेजें",
@@ -357,13 +368,12 @@ const SignupScreen = () => {
         guestDesc1: "बिना अकाउंट बनाए ऐप इस्तेमाल करें",
         guestDesc2: "आवाज़ से भी नियंत्रित कर सकते हैं",
         features: [
-          { icon: <SecureIcon />, text: "सुरक्षित" },
-          { icon: <EasyIcon />, text: "आसान" },
-          { icon: <TrustIcon />, text: "विश्वसनीय" },
+          { icon: <SecureIcon size={isMobile ? 24 : 28} />, text: "सुरक्षित" },
+          { icon: <EasyIcon size={isMobile ? 24 : 28} />, text: "आसान" },
+          { icon: <TrustIcon size={isMobile ? 24 : 28} />, text: "विश्वसनीय" },
         ],
         backButton: "← वापस",
-        footerText:
-          "जारी रखने पर आप हमारी शर्तों और गोपनीयता नीति से सहमत होते हैं",
+        footerText: "जारी रखने पर आप हमारी शर्तों और गोपनीयता नीति से सहमत होते हैं",
         loginText: "पहले से खाता है?",
         loginLink: "लॉगिन करें",
       };
@@ -381,18 +391,18 @@ const SignupScreen = () => {
       guestDesc1: "Use the app without creating an account",
       guestDesc2: "Voice control is also available",
       features: [
-        { icon: <SecureIcon />, text: "Secure" },
-        { icon: <EasyIcon />, text: "Easy" },
-        { icon: <TrustIcon />, text: "Trusted" },
+        { icon: <SecureIcon size={isMobile ? 24 : 28} />, text: "Secure" },
+        { icon: <EasyIcon size={isMobile ? 24 : 28} />, text: "Easy" },
+        { icon: <TrustIcon size={isMobile ? 24 : 28} />, text: "Trusted" },
       ],
       backButton: "← Back",
       footerText: "By continuing, you agree to our Terms & Privacy Policy",
       loginText: "Already have an account?",
       loginLink: "Login here",
     };
-  };
+  }, [selectedLanguage, isMobile]);
 
-  const text = getText();
+  const text = getText;
 
   return (
     <>
@@ -424,36 +434,43 @@ const SignupScreen = () => {
           40% { opacity: 0.35; }
           100% { transform: translateX(130%); opacity: 0.0; }
         }
+        
+        /* Mobile optimization */
+        @media (max-width: 640px) {
+          input, button {
+            font-size: 16px !important; /* Prevents zoom on iOS */
+          }
+        }
       `}</style>
 
       <div className="min-h-screen flex flex-col bg-gradient-to-b from-green-50 via-white to-green-50/40 relative overflow-hidden">
-        {/* Liquid blobs (more visible) */}
-        <div className="pointer-events-none absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(34,197,94,0.55)_0%,rgba(16,185,129,0.22)_35%,transparent_70%)] blur-3xl opacity-90 mix-blend-multiply animate-[liquidA_18s_ease-in-out_infinite]" />
-        <div className="pointer-events-none absolute top-[12%] -right-44 h-[520px] w-[520px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(16,185,129,0.55)_0%,rgba(34,197,94,0.22)_35%,transparent_70%)] blur-3xl opacity-90 mix-blend-multiply animate-[liquidB_22s_ease-in-out_infinite]" />
-        <div className="pointer-events-none absolute bottom-[-220px] left-[30%] h-[600px] w-[600px] rounded-full bg-[radial-gradient(circle_at_45%_45%,rgba(34,197,94,0.42)_0%,rgba(59,130,246,0.16)_40%,transparent_72%)] blur-3xl opacity-80 mix-blend-multiply animate-[liquidC_26s_ease-in-out_infinite]" />
+        {/* Liquid blobs (responsive sizes) */}
+        <div className="pointer-events-none absolute -top-40 -left-40 h-[300px] w-[300px] sm:h-[400px] sm:w-[400px] md:h-[520px] md:w-[520px] rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(34,197,94,0.55)_0%,rgba(16,185,129,0.22)_35%,transparent_70%)] blur-2xl md:blur-3xl opacity-90 mix-blend-multiply animate-[liquidA_18s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute top-[12%] -right-32 sm:-right-44 h-[300px] w-[300px] sm:h-[400px] sm:w-[400px] md:h-[520px] md:w-[520px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(16,185,129,0.55)_0%,rgba(34,197,94,0.22)_35%,transparent_70%)] blur-2xl md:blur-3xl opacity-90 mix-blend-multiply animate-[liquidB_22s_ease-in-out_infinite]" />
+        <div className="pointer-events-none absolute bottom-[-120px] sm:bottom-[-180px] md:bottom-[-220px] left-[30%] h-[350px] w-[350px] sm:h-[450px] sm:w-[450px] md:h-[600px] md:w-[600px] rounded-full bg-[radial-gradient(circle_at_45%_45%,rgba(34,197,94,0.42)_0%,rgba(59,130,246,0.16)_40%,transparent_72%)] blur-2xl md:blur-3xl opacity-80 mix-blend-multiply animate-[liquidC_26s_ease-in-out_infinite]" />
 
         {/* subtle sheen layer */}
         <div className="pointer-events-none absolute inset-0 opacity-40">
           <div className="absolute top-0 left-0 h-full w-1/2 bg-gradient-to-r from-transparent via-white/60 to-transparent blur-xl animate-[shimmer_7s_ease-in-out_infinite]" />
         </div>
 
-        {/* Header */}
-        <header className="px-5 sm:px-8 pt-6 pb-4 relative z-10">
-          <div className="max-w-5xl mx-auto flex items-start justify-between">
+        {/* Header - Responsive */}
+        <header className="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-3 sm:pb-4 relative z-10">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-0">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight">
                 DhanSaathi
               </h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
                 Onboarding • Step 2 of 4
               </p>
             </div>
 
-            <div className="text-right">
-              <div className="text-3xl font-bold text-green-600">
+            <div className="text-left sm:text-right">
+              <div className="text-2xl sm:text-3xl font-bold text-green-600">
                 {stepProgress}%
               </div>
-              <div className="w-28 h-2.5 bg-gray-200 rounded-full mt-2 overflow-hidden shadow-inner">
+              <div className="w-full sm:w-28 h-2 sm:h-2.5 bg-gray-200 rounded-full mt-1 sm:mt-2 overflow-hidden shadow-inner">
                 <div
                   className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-700 shadow-lg shadow-green-400/30"
                   style={{ width: `${stepProgress}%` }}
@@ -464,41 +481,42 @@ const SignupScreen = () => {
         </header>
 
         {/* Main premium glass card */}
-        <main className="flex-1 flex items-center justify-center px-5 sm:px-8 pb-10 relative z-10">
-          {/* 3D perspective wrapper */}
-          <div className="w-full max-w-5xl [perspective:1200px]">
+        <main className="flex-1 flex items-center justify-center px-4 sm:px-5 lg:px-8 pb-6 sm:pb-10 relative z-10">
+          {/* 3D perspective wrapper - Mobile: no perspective */}
+          <div className={`w-full max-w-5xl ${!isMobile ? '[perspective:1200px]' : ''}`}>
             {/* Gradient border ring */}
-            <div className="bg-gradient-to-br from-emerald-300/50 via-white to-slate-100/70 p-[1.5px] rounded-[34px] shadow-[0_32px_100px_rgba(15,23,42,0.22)]">
+            <div className="bg-gradient-to-br from-emerald-300/40 via-white to-slate-100/60 p-[1px] sm:p-[1.5px] rounded-2xl sm:rounded-[34px] shadow-[0_16px_40px_rgba(15,23,42,0.15)] sm:shadow-[0_32px_100px_rgba(15,23,42,0.22)]">
               {/* Glass body */}
-              <div className="relative bg-white/78 backdrop-blur-2xl rounded-[32px] px-6 py-8 sm:px-10 sm:py-10 flex flex-col md:flex-row gap-10 border border-white/60 shadow-inner transition-transform duration-500 hover:[transform:rotateX(1deg)_rotateY(-1.5deg)_translateY(-6px)]">
+              <div className="relative bg-white/85 sm:bg-white/78 backdrop-blur-xl sm:backdrop-blur-2xl rounded-2xl sm:rounded-[32px] px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 flex flex-col md:flex-row gap-6 sm:gap-8 lg:gap-10 border border-white/60 shadow-inner transition-transform duration-500 hover:sm:[transform:rotateX(1deg)_rotateY(-1.5deg)_translateY(-6px)]">
                 {/* inner highlight */}
-                <div className="pointer-events-none absolute inset-0 rounded-[32px] bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.8)_0%,transparent_40%)] opacity-40" />
+                <div className="pointer-events-none absolute inset-0 rounded-2xl sm:rounded-[32px] bg-[radial-gradient(circle_at_20%_10%,rgba(255,255,255,0.8)_0%,transparent_40%)] opacity-40" />
 
                 {/* LEFT */}
-                <div className="md:w-1/2 flex flex-col justify-between gap-10 relative">
-                  <div className="flex items-start justify-between gap-6">
-                    <div>
-                      <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
+                <div className="md:w-1/2 flex flex-col justify-between gap-6 sm:gap-8 lg:gap-10 relative">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6">
+                    <div className="flex-1">
+                      <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">
                         {text.welcome}
                       </h2>
-                      <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
+                      <p className="text-sm sm:text-base lg:text-lg text-gray-600 leading-relaxed sm:leading-relaxed">
                         {text.subtitle}
                       </p>
                     </div>
 
-                    {/* Animated chart */}
-                    <div className="hidden sm:block shrink-0">
-                      <AnimatedGrowthChart />
+                    {/* Animated chart - Hide on very small screens */}
+                    <div className={`${isMobile ? 'self-center' : 'shrink-0'} ${window.innerWidth < 400 ? 'hidden' : 'block'}`}>
+                      <AnimatedGrowthChart isMobile={isMobile} />
                     </div>
                   </div>
 
-                  <div className="flex justify-start gap-6 sm:gap-10">
+                  {/* Features - Responsive grid */}
+                  <div className="flex flex-wrap justify-start gap-4 sm:gap-6 lg:gap-10">
                     {text.features.map((feature, i) => (
                       <div key={i} className="flex flex-col items-center group">
-                        <div className="w-14 h-14 rounded-full bg-white/70 backdrop-blur border border-white/60 shadow-sm flex items-center justify-center mb-2 transition-all group-hover:shadow-md group-hover:-translate-y-0.5">
+                        <div className={`${isMobile ? 'w-12 h-12' : 'w-14 h-14'} rounded-full bg-white/70 backdrop-blur border border-white/60 shadow-sm flex items-center justify-center mb-2 transition-all group-hover:shadow-md group-hover:-translate-y-0.5`}>
                           {feature.icon}
                         </div>
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-xs sm:text-sm font-medium text-gray-700">
                           {feature.text}
                         </span>
                       </div>
@@ -507,51 +525,52 @@ const SignupScreen = () => {
                 </div>
 
                 {/* RIGHT */}
-                <div className="md:w-1/2 flex flex-col gap-5">
+                <div className="md:w-1/2 flex flex-col gap-4 sm:gap-5">
                   {/* Phone login card */}
-                  <div className="bg-white/82 backdrop-blur-xl border border-white/60 rounded-2xl shadow-[0_18px_45px_rgba(15,23,42,0.14)] p-6 transition-all hover:shadow-[0_26px_70px_rgba(15,23,42,0.16)] hover:-translate-y-0.5">
-                    <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+                  <div className="bg-white/85 sm:bg-white/82 backdrop-blur-xl rounded-xl sm:rounded-2xl border border-white/60 shadow-[0_12px_30px_rgba(15,23,42,0.1)] sm:shadow-[0_18px_45px_rgba(15,23,42,0.14)] p-4 sm:p-6 transition-all hover:shadow-[0_20px_50px_rgba(15,23,42,0.16)] hover:-translate-y-0.5">
+                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
                       {text.mobileLogin}
                     </h3>
 
-                    <label className="block text-gray-700 font-medium mb-2.5">
+                    <label className="block text-gray-700 font-medium mb-2 sm:mb-2.5 text-sm sm:text-base">
                       {text.enterPhone}
                     </label>
 
-                    <div className="relative mb-5">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
-                        <PhoneIcon />
+                    <div className="relative mb-4 sm:mb-5">
+                      <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                        <PhoneIcon size={isMobile ? 20 : 24} />
                       </div>
                       <input
                         type="tel"
                         value={phoneNumber}
                         onChange={handlePhoneChange}
                         placeholder="98765 43210"
-                        className="w-full pl-14 pr-14 py-3.5 bg-white/70 border border-gray-200 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+                        className="w-full pl-10 sm:pl-14 pr-10 sm:pr-14 py-3 sm:py-3.5 bg-white/70 border border-gray-200 rounded-xl sm:rounded-2xl text-base sm:text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                         maxLength={10}
                         inputMode="numeric"
                       />
                       <button
                         onClick={handleVoiceInput}
                         disabled={isLoading}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-green-600 transition-colors p-1 rounded-full hover:bg-green-50"
+                        className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-green-600 transition-colors p-1 rounded-full hover:bg-green-50 active:bg-green-100"
                         type="button"
+                        aria-label="Voice input"
                       >
-                        <VoiceIcon />
+                        <VoiceIcon size={isMobile ? 20 : 24} />
                       </button>
                     </div>
 
                     <button
                       onClick={handleSendOTP}
                       disabled={phoneNumber.length !== 10 || isLoading}
-                      className={`w-full py-3.5 rounded-2xl font-bold text-lg transition-all duration-300 ${
+                      className={`w-full py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-bold text-base sm:text-lg transition-all duration-300 active:scale-[0.98] ${
                         phoneNumber.length === 10 && !isLoading
                           ? "bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-2xl hover:scale-[1.02]"
                           : "bg-gray-200 text-gray-500 cursor-not-allowed"
                       }`}
                       type="button"
                     >
-                      {isLoading ? "Sending OTP..." : text.sendOTP}
+                      {isLoading ? (selectedLanguage === "hindi" ? "OTP भेजा जा रहा..." : "Sending OTP...") : text.sendOTP}
                     </button>
                   </div>
 
@@ -559,42 +578,42 @@ const SignupScreen = () => {
                   <button
                     onClick={handleContinueWithGoogle}
                     disabled={isLoading}
-                    className="w-full py-3.5 rounded-2xl font-semibold text-sm sm:text-base border border-white/70 bg-white/70 backdrop-blur hover:bg-white text-gray-900 flex items-center justify-center gap-3 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5"
+                    className="w-full py-3 sm:py-3.5 rounded-xl sm:rounded-2xl font-semibold text-sm sm:text-base border border-white/70 bg-white/70 backdrop-blur hover:bg-white text-gray-900 flex items-center justify-center gap-2 sm:gap-3 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 active:scale-[0.98]"
                     type="button"
                   >
-                    <GoogleIcon />
+                    <GoogleIcon size={isMobile ? 20 : 22} />
                     {text.continueWithGoogle}
                   </button>
 
                   {/* Divider */}
                   <div className="flex items-center w-full">
                     <div className="flex-1 h-px bg-gray-200" />
-                    <span className="px-4 text-xs font-medium text-gray-500">
+                    <span className="px-3 sm:px-4 text-xs font-medium text-gray-500">
                       {text.or}
                     </span>
                     <div className="flex-1 h-px bg-gray-200" />
                   </div>
 
                   {/* Guest card */}
-                  <div className="bg-gradient-to-br from-green-50/80 to-white rounded-2xl border border-green-100 shadow-md p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
+                  <div className="bg-gradient-to-br from-green-50/80 to-white rounded-xl sm:rounded-2xl border border-green-100 shadow-sm sm:shadow-md p-4 sm:p-5 transition-all hover:shadow-lg hover:-translate-y-0.5">
                     <button
                       onClick={handleContinueWithoutAccount}
                       disabled={isLoading}
-                      className="w-full text-left group"
+                      className="w-full text-left group active:opacity-80"
                       type="button"
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-green-700 group-hover:text-green-800 transition-colors">
+                      <div className="flex items-center justify-between mb-2 sm:mb-3">
+                        <h3 className="text-base sm:text-lg font-semibold text-green-700 group-hover:text-green-800 transition-colors">
                           {text.continueWithoutAccount}
                         </h3>
                       </div>
-                      <div className="space-y-2.5 text-gray-600 text-sm">
+                      <div className="space-y-1.5 sm:space-y-2.5 text-gray-600 text-xs sm:text-sm">
                         <p className="flex items-start gap-2">
-                          <span className="text-green-500 text-lg">•</span>
+                          <span className="text-green-500 text-base sm:text-lg mt-0.5">•</span>
                           {text.guestDesc1}
                         </p>
                         <p className="flex items-start gap-2">
-                          <span className="text-green-500 text-lg">•</span>
+                          <span className="text-green-500 text-base sm:text-lg mt-0.5">•</span>
                           {text.guestDesc2}
                         </p>
                       </div>
@@ -605,7 +624,7 @@ const SignupScreen = () => {
                   <button
                     onClick={() => navigate(-1)}
                     disabled={isLoading}
-                    className="w-full py-3.5 bg-gray-50 text-gray-700 rounded-2xl font-medium hover:bg-gray-100 transition-colors disabled:opacity-50"
+                    className="w-full py-3 sm:py-3.5 bg-gray-50 text-gray-700 rounded-xl sm:rounded-2xl font-medium hover:bg-gray-100 transition-colors disabled:opacity-50 active:scale-[0.98]"
                     type="button"
                   >
                     {text.backButton}
@@ -616,15 +635,15 @@ const SignupScreen = () => {
           </div>
         </main>
 
-        {/* Footer */}
-        <footer className="px-5 sm:px-8 pb-8 text-center text-sm text-gray-500 relative z-10">
-          <p>{text.footerText}</p>
-          <p className="mt-2">
+        {/* Footer - Responsive */}
+        <footer className="px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 text-center text-xs sm:text-sm text-gray-500 relative z-10">
+          <p className="leading-relaxed">{text.footerText}</p>
+          <p className="mt-1 sm:mt-2">
             {text.loginText}{" "}
             <button
               onClick={() => navigate("/login")}
               disabled={isLoading}
-              className="text-green-600 font-medium hover:text-green-700 underline"
+              className="text-green-600 font-medium hover:text-green-700 underline active:text-green-800"
               type="button"
             >
               {text.loginLink}
@@ -635,14 +654,17 @@ const SignupScreen = () => {
         {/* Loading overlay */}
         {isLoading && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center">
-              <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-green-600 animate-spin mb-5" />
-              <p className="text-lg font-medium text-gray-800">
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col items-center mx-4">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full border-4 border-gray-200 border-t-green-600 animate-spin mb-4 sm:mb-5" />
+              <p className="text-base sm:text-lg font-medium text-gray-800">
                 {selectedLanguage === "hindi" ? "प्रसंस्करण..." : "Processing..."}
               </p>
             </div>
           </div>
         )}
+
+        {/* Mobile bottom safe area */}
+        <div className="h-4 sm:h-0" />
       </div>
     </>
   );
