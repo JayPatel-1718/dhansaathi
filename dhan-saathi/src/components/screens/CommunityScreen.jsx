@@ -1586,7 +1586,7 @@ export default function CommunityScreen() {
                   radial-gradient(circle at top left, rgba(187,247,208,0.6) 0, transparent 55%),
                   radial-gradient(circle at bottom right, rgba(191,219,254,0.55) 0, transparent 55%)
                 `,
-                opacity: 0.7,
+                opacity: 1,
               }}
             >
               {/* Blobs */}
@@ -1665,7 +1665,7 @@ export default function CommunityScreen() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-white/80 border border-gray-200 shadow-sm w-full sm:w-72">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-gray-200 shadow-sm w-full sm:w-72">
                       <Search className="h-4 w-4 text-gray-400" />
                       <input
                         type="text"
@@ -1697,7 +1697,7 @@ export default function CommunityScreen() {
                       className={
                         selectedCategory === cat
                           ? "px-4 py-2 rounded-full bg-green-600 text-white text-xs sm:text-sm font-semibold shadow-sm"
-                          : "px-4 py-2 rounded-full bg-white/80 border border-gray-200 text-xs sm:text-sm text-gray-700 hover:border-green-400 hover:text-green-700 transition"
+                          : "px-4 py-2 rounded-full bg-white border border-gray-200 text-xs sm:text-sm text-gray-700 hover:border-green-400 hover:text-green-700 transition"
                       }
                     >
                       {getCategoryText(cat)}
@@ -1710,14 +1710,14 @@ export default function CommunityScreen() {
                   {/* LEFT */}
                   <section className="space-y-4">
                     {filteredQuestions.length === 0 ? (
-                      <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow p-6 text-gray-700">
+                      <div className="rounded-3xl bg-white border border-gray-100 shadow p-6 text-gray-700">
                         {t.noDiscussions}
                       </div>
                     ) : (
                       filteredQuestions.map((q) => (
                         <article
                           key={q.id}
-                          className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-[0_18px_35px_rgba(15,23,42,0.06)] p-5 sm:p-6"
+                          className="rounded-3xl bg-white border border-gray-100 shadow-[0_18px_35px_rgba(15,23,42,0.06)] p-5 sm:p-6"
                         >
                           <div className="flex items-start justify-between gap-3 mb-3">
                             <div className="flex items-center gap-3">
@@ -1876,7 +1876,7 @@ export default function CommunityScreen() {
                   {/* RIGHT */}
                   <aside className="space-y-5 lg:space-y-6">
                     {/* Top contributors */}
-                    <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5">
+                    <div className="rounded-3xl bg-white border border-gray-100 shadow-lg p-5">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-semibold text-gray-900">
                           {t.topContributors}
@@ -1893,7 +1893,7 @@ export default function CommunityScreen() {
                           {contributors.map((c, idx) => (
                             <div
                               key={c.id}
-                              className="flex items-center justify-between p-3 rounded-2xl bg-gray-50/50 hover:bg-gray-50 transition-colors"
+                              className="flex items-center justify-between p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 transition-colors"
                             >
                               <div className="flex items-center gap-3">
                                 <div className="relative">
@@ -1967,7 +1967,7 @@ export default function CommunityScreen() {
                       </div>
                     </div>
 
-                    <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5">
+                    <div className="rounded-3xl bg-white border border-gray-100 shadow-lg p-5">
                       <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <Info className="h-4 w-4 text-emerald-600" />
                         {t.communityGuidelines}
@@ -2021,7 +2021,7 @@ export default function CommunityScreen() {
                       </div>
                     )}
 
-                    <div className="rounded-3xl bg-white/95 backdrop-blur border border-gray-100 shadow-lg p-5 flex items-center gap-3">
+                    <div className="rounded-3xl bg-white border border-gray-100 shadow-lg p-5 flex items-center gap-3">
                       <Users className="h-6 w-6 text-emerald-600" />
                       <div>
                         <p className="text-sm font-semibold text-gray-900">

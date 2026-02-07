@@ -48,9 +48,15 @@ import {
   Clock,
   HelpCircle,
   ShieldCheck,
+  Menu,
+  ChevronLeft,
+  BarChart3,
+  Lightbulb,
+  Calendar,
+  ShieldCheck as ShieldCheckIcon,
 } from "lucide-react";
 
-// Bilingual content
+// Bilingual content - KEEP EXACTLY THE SAME
 const HELP_TEXT = {
   hindi: {
     // Navbar
@@ -64,7 +70,7 @@ const HELP_TEXT = {
     logout: "लॉग आउट",
     signin: "साइन इन",
     
-    // Page content
+    // Page content - ALL OTHER CONTENT REMAINS EXACTLY THE SAME
     title: "सहायता और समर्थन",
     subtitle: "तुरंत उत्तर खोजें या हमारे विशेषज्ञों से बात करें।",
     
@@ -204,7 +210,7 @@ const HELP_TEXT = {
   }
 };
 
-// Animation variants
+// Animation variants - KEEP EXACTLY THE SAME
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
@@ -259,6 +265,10 @@ export default function HelpScreen() {
   // Reactive background
   const [mouse, setMouse] = useState({ x: 320, y: 220 });
 
+  // Sidebar state (NEW - copied from Dashboard)
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   // Profile dropdown
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -288,6 +298,15 @@ export default function HelpScreen() {
     return () => unsub();
   }, [fbUser]);
 
+  // Close mobile sidebar on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setMobileSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     const onDown = (e) => {
@@ -299,8 +318,17 @@ export default function HelpScreen() {
   }, []);
 
   // User initials for avatar
-  const displayName = fbUser?.displayName || "Guest";
+  const displayName = useMemo(() => {
+    if (fbUser?.displayName) return fbUser.displayName;
+    if (fbUser?.email) {
+      const emailName = fbUser.email.split("@")[0];
+      return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+    }
+    return userLanguage === "hindi" ? "अतिथि" : "Guest";
+  }, [fbUser, userLanguage]);
+
   const email = fbUser?.email || "";
+  
   const initials = useMemo(() => {
     const src = (displayName || email || "U").trim();
     const parts = src.split(" ").filter(Boolean);
@@ -374,7 +402,7 @@ export default function HelpScreen() {
     }
   };
 
-  // Pricing tiers
+  // Pricing tiers - KEEP EXACTLY THE SAME
   const tiers = [
     {
       id: "free",
@@ -403,7 +431,7 @@ export default function HelpScreen() {
     },
   ];
 
-  // Expert list
+  // Expert list - KEEP EXACTLY THE SAME
   const experts = [
     {
       name: "Ananya Sharma",
@@ -443,7 +471,7 @@ export default function HelpScreen() {
     },
   ];
 
-  // Helplines
+  // Helplines - KEEP EXACTLY THE SAME
   const helplines = [
     {
       title: t.bankFraudTitle,
@@ -474,7 +502,7 @@ export default function HelpScreen() {
     },
   ];
 
-  // Handle button clicks with Firebase logging
+  // Handle button clicks with Firebase logging - KEEP EXACTLY THE SAME
   const handleFreeChatClick = async () => {
     await logEvent("help_free_chat_clicked");
     await incrementHelpInteractions();
@@ -571,7 +599,29 @@ export default function HelpScreen() {
     }
   };
 
-  // Live Chat Modal Component
+  // Sidebar navigation items (NEW - from Dashboard)
+  const sidebarNavItems = [
+    { label: t.home, icon: Home, onClick: () => navigate("/home"), active: false },
+    { label: t.schemes, icon: Building2, onClick: () => navigate("/schemes"), active: false },
+    { label: t.community, icon: Sparkle, onClick: () => navigate("/community"), active: false },
+    { label: t.learn, icon: BookOpen, onClick: () => navigate("/learn"), active: false },
+    { label: t.help, icon: HelpCircle, onClick: () => navigate("/help"), active: true },
+  ];
+
+  const sidebarBottomItems = [
+    {
+      label: userLanguage === "hindi" ? "प्रोफाइल" : "Profile",
+      icon: UserCog,
+      onClick: () => navigate("/profile"),
+    },
+    {
+      label: userLanguage === "hindi" ? "भाषा बदलें" : "Language",
+      icon: Globe,
+      onClick: toggleLanguage,
+    },
+  ];
+
+  // Live Chat Modal Component - KEEP EXACTLY THE SAME
   const LiveChatModal = () => (
     <AnimatePresence>
       {showLiveChat && (
@@ -659,6 +709,200 @@ export default function HelpScreen() {
     </AnimatePresence>
   );
 
+  // Sidebar Content Component (NEW - from Dashboard)
+  const SidebarContent = ({ collapsed = false, onClose = null }) => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div
+        className={`flex items-center ${
+          collapsed ? "justify-center" : "justify-between"
+        } px-4 py-5 border-b border-gray-100`}
+      >
+        <div
+          className="flex items-center gap-2.5 cursor-pointer"
+          onClick={() => navigate("/home")}
+        >
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-green-200/50 flex-shrink-0">
+            <IndianRupee className="h-5 w-5 text-white" />
+          </div>
+          {!collapsed && (
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              {t.appName}
+            </span>
+          )}
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* User card */}
+      <div
+        className={`mx-3 mt-4 mb-2 ${
+          collapsed ? "px-1" : "px-3"
+        } py-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100`}
+      >
+        <div
+          className={`flex ${
+            collapsed ? "justify-center" : "items-center gap-3"
+          }`}
+        >
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-sm shadow flex-shrink-0">
+            {fbUser?.photoURL ? (
+              <img
+                src={fbUser.photoURL}
+                alt=""
+                className="h-full w-full rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              initials
+            )}
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                {displayName}
+              </p>
+              <p className="text-[11px] text-gray-500 truncate">{email}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main nav */}
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+        <p
+          className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest ${
+            collapsed ? "text-center" : "px-3"
+          } mb-2`}
+        >
+          {collapsed ? "—" : userLanguage === "hindi" ? "मुख्य मेनू" : "Main Menu"}
+        </p>
+
+        {sidebarNavItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              onClick={() => {
+                item.onClick();
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center ${
+                collapsed ? "justify-center" : ""
+              } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                item.active
+                  ? "bg-emerald-100 text-emerald-800 shadow-sm"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+              title={collapsed ? item.label : undefined}
+            >
+              <Icon
+                className={`h-5 w-5 flex-shrink-0 ${
+                  item.active
+                    ? "text-emerald-600"
+                    : "text-gray-400 group-hover:text-gray-600"
+                }`}
+              />
+              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && item.active && (
+                <div className="ml-auto h-2 w-2 rounded-full bg-emerald-500" />
+              )}
+            </button>
+          );
+        })}
+
+        <div className="my-4 border-t border-gray-100" />
+
+        <p
+          className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest ${
+            collapsed ? "text-center" : "px-3"
+          } mb-2`}
+        >
+          {collapsed
+            ? "—"
+            : userLanguage === "hindi"
+            ? "अन्य"
+            : "Others"}
+        </p>
+
+        {sidebarBottomItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              onClick={() => {
+                item.onClick();
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center ${
+                collapsed ? "justify-center" : ""
+              } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all group`}
+              title={collapsed ? item.label : undefined}
+            >
+              <Icon className="h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-600" />
+              {!collapsed && <span>{item.label}</span>}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Bottom section */}
+      <div className="px-3 pb-4 space-y-2 border-t border-gray-100 pt-3">
+        {/* Collapse toggle (desktop only) */}
+        <button
+          onClick={() => setSidebarOpen((v) => !v)}
+          className={`hidden lg:flex w-full items-center ${
+            collapsed ? "justify-center" : ""
+          } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all`}
+          title={userLanguage === "hindi" ? "छोटा करें" : "Collapse sidebar"}
+        >
+          <ChevronLeft
+            className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 ${
+              collapsed ? "rotate-180" : ""
+            }`}
+          />
+          {!collapsed && (
+            <span>
+              {userLanguage === "hindi" ? "छोटा करें" : "Collapse"}
+            </span>
+          )}
+        </button>
+
+        {/* Logout */}
+        {fbUser ? (
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center ${
+              collapsed ? "justify-center" : ""
+            } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-all`}
+            title={collapsed ? t.logout : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span>{t.logout}</span>}
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/signup")}
+            className={`w-full flex items-center ${
+              collapsed ? "justify-center" : ""
+            } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-green-700 hover:bg-green-50 transition-all`}
+            title={collapsed ? t.signin : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0 rotate-180" />
+            {!collapsed && <span>{t.signin}</span>}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <style>{`
@@ -678,668 +922,665 @@ export default function HelpScreen() {
           0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
           50% { box-shadow: 0 0 40px rgba(245, 158, 11, 0.6); }
         }
+        @keyframes sheen {
+          0% { transform: translateX(-50%); opacity: 0; }
+          20% { opacity: 0.22; }
+          60% { opacity: 0.22; }
+          100% { transform: translateX(150%); opacity: 0; }
+        }
       `}</style>
 
-      <div
-        className="min-h-screen relative overflow-hidden bg-gradient-to-br from-emerald-50/30 via-white to-blue-50/30"
-        onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
-        style={{
-          backgroundImage: `
-            radial-gradient(1000px circle at ${mouse.x}px ${mouse.y}px, rgba(16,185,129,0.15), transparent 45%),
-            radial-gradient(circle at top left, rgba(187,247,208,0.6) 0, transparent 65%),
-            radial-gradient(circle at bottom right, rgba(191,219,254,0.5) 0, transparent 65%)
-          `,
-        }}
-      >
-        <div className="pointer-events-none absolute -top-52 -left-52 h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(34,197,94,0.45)_0%,rgba(16,185,129,0.18)_38%,transparent_70%)] blur-3xl opacity-90 mix-blend-multiply animate-[blobA_18s_ease-in-out_infinite]" />
-        <div className="pointer-events-none absolute top-[25%] -right-60 h-[640px] w-[640px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(16,185,129,0.38)_0%,rgba(59,130,246,0.15)_42%,transparent_72%)] blur-3xl opacity-80 mix-blend-multiply animate-[blobB_22s_ease-in-out_infinite]" />
+      <div className="flex h-screen overflow-hidden bg-gray-50">
+        {/* ═══ MOBILE SIDEBAR OVERLAY ═══ */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
 
-        {/* Premium NAVBAR */}
-        <motion.header
-          initial={{ y: -100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          className="w-full bg-white/95 backdrop-blur-xl border-b border-gray-200/50 sticky top-0 z-40"
+        {/* ═══ MOBILE SIDEBAR ═══ */}
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-100 shadow-2xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-            <motion.button 
-              onClick={() => navigate("/home")}
-              className="flex items-center gap-2.5 group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center shadow-lg">
-                <IndianRupee className="h-5 w-5 text-white" />
+          <SidebarContent onClose={() => setMobileSidebarOpen(false)} />
+        </aside>
+
+        {/* ═══ DESKTOP SIDEBAR ═══ */}
+        <aside
+          className={`hidden lg:flex flex-col flex-shrink-0 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out ${
+            sidebarOpen ? "w-64" : "w-20"
+          }`}
+        >
+          <SidebarContent collapsed={!sidebarOpen} />
+        </aside>
+
+        {/* ═══ MAIN AREA ═══ */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* ═══ TOP BAR ═══ */}
+          <header className="flex-shrink-0 bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-20">
+            <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+              {/* Left: hamburger + page title */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="lg:hidden h-10 w-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-900">
+                    {t.help}
+                  </h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">
+                    {userLanguage === "hindi"
+                      ? "24/7 सहायता और समर्थन"
+                      : "24/7 Help & Support"}
+                  </p>
+                </div>
               </div>
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-green-700 to-emerald-600 bg-clip-text text-transparent">
-                {t.appName}
-              </span>
-            </motion.button>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
-              {[
-                { icon: <Home className="h-4 w-4" />, label: t.home, path: "/home" },
-                { icon: <Building2 className="h-4 w-4" />, label: t.schemes, path: "/schemes" },
-                { icon: <Sparkle className="h-4 w-4" />, label: t.community, path: "/community" },
-                { icon: <BookOpen className="h-4 w-4" />, label: t.learn, path: "/learn" },
-              ].map((item) => (
-                <motion.button
-                  key={item.label}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              {/* Right: lang + notification + profile */}
+              <div className="flex items-center gap-3">
+                <button
                   type="button"
-                  onClick={() => navigate(item.path)}
-                  className="flex items-center gap-1.5 text-gray-600 hover:text-gray-900 transition"
+                  onClick={toggleLanguage}
+                  className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
                 >
-                  {item.icon}
-                  {item.label}
-                </motion.button>
-              ))}
-              
-              <motion.button
-                type="button"
-                className="relative text-emerald-700 font-semibold flex items-center gap-1.5"
-                whileHover={{ scale: 1.05 }}
-              >
-                <MessageSquare className="h-4 w-4" />
-                {t.help}
-                <motion.span 
-                  layoutId="activeTab"
-                  className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-green-500"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              </motion.button>
-            </nav>
+                  <Globe className="h-4 w-4" />
+                  <span className="text-xs font-medium">
+                    {userLanguage === "hindi" ? "हिंदी" : "English"}
+                  </span>
+                  <span className="text-xs text-gray-500">⇄</span>
+                </button>
 
-            <div className="flex items-center gap-3">
-              <motion.button
-                type="button"
-                onClick={toggleLanguage}
-                className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow-sm text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
-                title={userLanguage === 'hindi' ? "Switch to English" : "Switch to Hindi"}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Globe className="h-4 w-4" />
-                <span className="text-xs font-medium">
-                  {userLanguage === 'hindi' ? 'हिंदी' : 'English'}
-                </span>
-              </motion.button>
-
-              <motion.button
-                type="button"
-                className="hidden sm:inline-flex h-10 w-10 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow-sm items-center justify-center text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5 relative"
-                title={t.notifications}
-                onClick={() => alert(t.comingSoon)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Bell className="h-5 w-5" />
-                <motion.span
-                  className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full border-2 border-white"
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.button>
-
-              <div className="relative" ref={menuRef}>
-                <motion.button
+                <button
                   type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 shadow-lg flex items-center justify-center text-white font-semibold relative"
-                  aria-label="Account menu"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+                  className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 hover:bg-gray-50 transition relative"
+                  onClick={() =>
+                    alert(
+                      userLanguage === "hindi"
+                        ? "जल्द ही आ रहा है"
+                        : "Notifications coming soon"
+                    )
+                  }
                 >
-                  {fbUser?.photoURL ? (
-                    <img
-                      src={fbUser.photoURL}
-                      alt="Profile"
-                      className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <span>{initials}</span>
-                  )}
-                </motion.button>
+                  <Bell className="h-5 w-5" />
+                  <div className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white" />
+                </button>
 
-                <AnimatePresence>
-                  {menuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-3 w-72 rounded-2xl bg-white/95 backdrop-blur-xl border border-gray-200 shadow-2xl overflow-hidden z-50"
+                {/* Profile mini-dropdown */}
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    className="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-green-400 to-emerald-500 shadow flex items-center justify-center text-white font-semibold"
+                  >
+                    {fbUser?.photoURL ? (
+                      <img
+                        src={fbUser.photoURL}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </button>
+
+                  <div
+                    className={`absolute right-0 mt-3 w-72 rounded-2xl bg-white/95 backdrop-blur border border-gray-200 shadow-xl overflow-hidden origin-top-right transition-all duration-200 ${
+                      menuOpen
+                        ? "opacity-100 scale-100 translate-y-0"
+                        : "pointer-events-none opacity-0 scale-95 -translate-y-2"
+                    }`}
+                  >
+                    <div className="px-4 py-4">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {displayName}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1 break-all">
+                        {email || t.notSignedIn}
+                      </p>
+                      <div className="mt-2">
+                        <span
+                          className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                            userDoc?.profileComplete
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {userDoc?.profileComplete
+                            ? userLanguage === "hindi"
+                              ? "प्रोफाइल पूर्ण"
+                              : "Profile Complete"
+                            : userLanguage === "hindi"
+                            ? "प्रोफाइल अधूरी"
+                            : "Profile Incomplete"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="h-px bg-gray-100" />
+                    <button
+                      onClick={() => {
+                        navigate("/profile");
+                        setMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                     >
-                      <div className="p-4 border-b border-gray-100">
-                        <p className="text-sm font-semibold text-gray-900">{displayName}</p>
-                        <p className="text-xs text-gray-600 mt-1 break-all">{email || t.notSignedIn}</p>
-                      </div>
-
-                      <div className="p-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            toggleLanguage();
-                            setMenuOpen(false);
-                          }}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-xl transition"
-                        >
-                          <Globe className="h-4 w-4 text-emerald-600" />
-                          {userLanguage === 'hindi' ? 'Switch to English' : 'हिंदी में बदलें'}
-                        </button>
-                        
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigate("/profile");
-                            setMenuOpen(false);
-                          }}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 rounded-xl transition"
-                        >
-                          <UserCog className="h-4 w-4 text-emerald-600" />
-                          {userLanguage === 'hindi' ? 'प्रोफाइल सेटिंग्स' : 'Profile Settings'}
-                        </button>
-                      </div>
-
-                      <div className="p-2 border-t border-gray-100">
-                        {fbUser ? (
-                          <button
-                            type="button"
-                            className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 rounded-xl transition"
-                            onClick={() => {
-                              handleLogout();
-                              setMenuOpen(false);
-                            }}
-                          >
-                            <LogOut className="h-4 w-4" />
-                            {t.logout}
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            className="w-full px-4 py-3 text-left text-sm text-emerald-700 hover:bg-emerald-50 rounded-xl transition"
-                            onClick={() => {
-                              navigate("/signup");
-                              setMenuOpen(false);
-                            }}
-                          >
-                            {t.signin}
-                          </button>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      <UserCog className="h-4 w-4 text-gray-400" />
+                      {userLanguage === "hindi" ? "प्रोफाइल देखें" : "View Profile"}
+                    </button>
+                    <div className="h-px bg-gray-100" />
+                    {fbUser ? (
+                      <button
+                        className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                        onClick={handleLogout}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {t.logout}
+                      </button>
+                    ) : (
+                      <button
+                        className="w-full px-4 py-3 text-left text-sm text-green-700 hover:bg-green-50"
+                        onClick={() => navigate("/signup")}
+                      >
+                        {t.signin}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </motion.header>
+          </header>
 
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-7 lg:py-10">
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={fadeInUp}
-            className="mb-10"
+          {/* ═══ SCROLLABLE CONTENT ═══ */}
+          <main
+            className="flex-1 overflow-y-auto"
+            onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
           >
-            <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 mb-4"
-              variants={scaleIn}
+            <div
+              className="min-h-full relative"
+              style={{
+                backgroundImage: `
+                  radial-gradient(800px circle at ${mouse.x}px ${mouse.y}px, rgba(16,185,129,0.08), transparent 42%),
+                  radial-gradient(circle at top left, rgba(187,247,208,0.35) 0, transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(191,219,254,0.3) 0, transparent 55%)
+                `,
+              }}
             >
-              <Sparkles className="h-4 w-4 text-emerald-600" />
-              <span className="text-sm font-semibold text-emerald-700">
-                24/7 Support Available
-              </span>
-            </motion.div>
-            
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4">
-              {t.title}
-            </h1>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl">
-              {t.subtitle}
-            </p>
-          </motion.div>
+              {/* Blobs */}
+              <div className="pointer-events-none absolute -top-48 -left-48 h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(34,197,94,0.25)_0%,rgba(16,185,129,0.08)_38%,transparent_70%)] blur-3xl opacity-90 mix-blend-multiply animate-[blobA_18s_ease-in-out_infinite]" />
+              <div className="pointer-events-none absolute top-[25%] -right-56 h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(16,185,129,0.20)_0%,rgba(59,130,246,0.08)_42%,transparent_72%)] blur-3xl opacity-80 mix-blend-multiply animate-[blobB_22s_ease-in-out_infinite]" />
 
-          <div className="grid gap-8 lg:grid-cols-[2.1fr,1fr]">
-            {/* LEFT COLUMN */}
-            <section className="space-y-8">
-              <motion.div
-                variants={fadeInUp}
-                initial="hidden"
-                animate="visible"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
-                      <MessageSquare className="h-5 w-5 text-emerald-700" />
-                    </div>
-                    {t.askExpert}
-                  </h2>
-                </div>
-
-                {/* Pricing cards */}
-                <div className="grid sm:grid-cols-2 gap-6">
-                  {tiers.map((tier) => (
-                    <motion.div
-                      key={tier.id}
-                      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                      className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${tier.gradient} border ${tier.border} p-1 shadow-lg`}
-                    >
-                      <div className="relative bg-white/95 backdrop-blur rounded-[22px] p-6 h-full">
-                        {/* Badge */}
-                        <div className="flex items-center justify-between mb-4">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-                            tier.id === "premium" 
-                              ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200"
-                              : "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200"
-                          }`}>
-                            {tier.badge}
-                          </span>
-                          <motion.div
-                            animate={tier.pulse ? pulseAnimation : {}}
-                          >
-                            {tier.icon}
-                          </motion.div>
-                        </div>
-
-                        {/* Price */}
-                        <div className="mb-4">
-                          <p className="text-3xl font-extrabold text-gray-900">
-                            {tier.price}
-                            {tier.id === "premium" && (
-                              <span className="text-sm text-gray-500 font-normal ml-2">/month</span>
-                            )}
-                          </p>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {tier.title}
-                          </p>
-                        </div>
-
-                        {/* Features */}
-                        <div className="space-y-3 mb-6">
-                          {tier.points.map((point, index) => (
-                            <motion.div
-                              key={point}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: index * 0.1 }}
-                              className="flex items-center gap-3"
-                            >
-                              <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                              </div>
-                              <p className="text-sm text-gray-700">{point}</p>
-                            </motion.div>
-                          ))}
-                        </div>
-
-                        {/* Action Button */}
-                        <motion.button
-                          type="button"
-                          onClick={tier.id === "premium" ? handlePremiumConnect : handleFreeChatClick}
-                          className={`w-full px-4 py-3 rounded-xl font-semibold transition-all hover:-translate-y-0.5 ${tier.buttonStyle}`}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          {tier.buttonText}
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Quick Help CTA */}
+              {/* ═══ ORIGINAL HELP SCREEN CONTENT (UNCHANGED) ═══ */}
+              <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="mt-6"
+                  initial="hidden"
+                  animate="visible"
+                  variants={fadeInUp}
+                  className="mb-10"
                 >
-                  <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/60 border border-blue-200 rounded-2xl p-6 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-lg">{t.getHelpNow}</h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {userLanguage === "hindi" 
-                            ? "तुरंत सहायता प्राप्त करें" 
-                            : "Get immediate help"}
-                        </p>
-                      </div>
-                      <motion.button
-                        onClick={handleFreeChatClick}
-                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-semibold rounded-xl hover:shadow-lg transition"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        {t.liveChat}
-                      </motion.button>
-                    </div>
-                  </div>
+                  <motion.div
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 mb-4"
+                    variants={scaleIn}
+                  >
+                    <Sparkles className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm font-semibold text-emerald-700">
+                      24/7 Support Available
+                    </span>
+                  </motion.div>
+                  
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4">
+                    {t.title}
+                  </h1>
+                  <p className="text-lg sm:text-xl text-gray-600 max-w-2xl">
+                    {t.subtitle}
+                  </p>
                 </motion.div>
-              </motion.div>
 
-              {/* Available Experts */}
-              <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                animate="visible"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                      <Headset className="h-5 w-5 text-purple-700" />
-                    </div>
-                    {t.availableExperts}
-                  </h2>
-                  <span className="text-sm text-gray-500">
-                    {experts.filter(e => e.online).length} {t.online.toLowerCase()}
-                  </span>
-                </div>
-
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {experts.map((expert, index) => (
+                <div className="grid gap-8 lg:grid-cols-[2.1fr,1fr]">
+                  {/* LEFT COLUMN */}
+                  <section className="space-y-8">
                     <motion.div
-                      key={expert.name}
                       variants={fadeInUp}
-                      custom={index}
+                      initial="hidden"
+                      animate="visible"
                     >
-                      <motion.div
-                        whileHover={{ y: -3, transition: { duration: 0.2 } }}
-                        className={`rounded-2xl border ${expert.online ? 'border-emerald-200' : 'border-gray-200'} bg-white/95 backdrop-blur p-5 hover:shadow-lg transition-all cursor-pointer`}
-                        onClick={() => handleExpertClick(expert)}
-                      >
-                        <div className="flex items-start gap-4">
-                          {/* Avatar */}
-                          <div className="relative">
-                            <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${expert.avatarColor} flex items-center justify-center`}>
-                              <span className="text-sm font-bold text-white">
-                                {expert.name.charAt(0)}
-                              </span>
-                            </div>
-                            {expert.online && (
-                              <motion.div
-                                animate={{ scale: [1, 1.2, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white"
-                              />
-                            )}
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
+                            <MessageSquare className="h-5 w-5 text-emerald-700" />
                           </div>
+                          {t.askExpert}
+                        </h2>
+                      </div>
 
-                          {/* Expert Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <p className="font-semibold text-gray-900 truncate">
-                                  {expert.name}
+                      {/* Pricing cards */}
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        {tiers.map((tier) => (
+                          <motion.div
+                            key={tier.id}
+                            whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                            className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${tier.gradient} border ${tier.border} p-1 shadow-lg`}
+                          >
+                            <div className="relative bg-white/95 backdrop-blur rounded-[22px] p-6 h-full">
+                              {/* Badge */}
+                              <div className="flex items-center justify-between mb-4">
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                                  tier.id === "premium" 
+                                    ? "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200"
+                                    : "bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200"
+                                }`}>
+                                  {tier.badge}
+                                </span>
+                                <motion.div
+                                  animate={tier.pulse ? pulseAnimation : {}}
+                                >
+                                  {tier.icon}
+                                </motion.div>
+                              </div>
+
+                              {/* Price */}
+                              <div className="mb-4">
+                                <p className="text-3xl font-extrabold text-gray-900">
+                                  {tier.price}
+                                  {tier.id === "premium" && (
+                                    <span className="text-sm text-gray-500 font-normal ml-2">/month</span>
+                                  )}
                                 </p>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {expert.tags.map((tag) => (
-                                    <span
-                                      key={tag}
-                                      className="text-[11px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-700"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                </div>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {tier.title}
+                                </p>
                               </div>
-                              <motion.div
-                                whileHover={{ x: 5 }}
-                                className={`h-6 w-6 rounded-full flex items-center justify-center ${expert.online ? 'text-emerald-600' : 'text-gray-400'}`}
-                              >
-                                <ArrowRight className="h-4 w-4" />
-                              </motion.div>
-                            </div>
 
-                            {/* Stats */}
-                            <div className="flex items-center justify-between mt-4">
-                              <div className="flex items-center gap-4">
-                                <div className="flex items-center gap-1">
-                                  <Star className="h-4 w-4 text-amber-500" />
-                                  <span className="text-sm font-semibold text-gray-900">
-                                    {expert.rating.toFixed(1)}
-                                  </span>
-                                </div>
-                                <span className="text-xs text-gray-500">
-                                  ({expert.reviews} {t.reviews})
-                                </span>
+                              {/* Features */}
+                              <div className="space-y-3 mb-6">
+                                {tier.points.map((point, index) => (
+                                  <motion.div
+                                    key={point}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="flex items-center gap-3"
+                                  >
+                                    <div className="h-6 w-6 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                      <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                    </div>
+                                    <p className="text-sm text-gray-700">{point}</p>
+                                  </motion.div>
+                                ))}
                               </div>
-                              
-                              <div className="text-right">
-                                <span className={`text-xs font-semibold ${expert.online ? 'text-emerald-700' : 'text-gray-500'}`}>
-                                  {expert.online ? t.online : t.offline}
-                                </span>
-                                {expert.online && (
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {expert.responseTime} {userLanguage === "hindi" ? "प्रतिक्रिया" : "response"}
-                                  </p>
-                                )}
-                              </div>
+
+                              {/* Action Button */}
+                              <motion.button
+                                type="button"
+                                onClick={tier.id === "premium" ? handlePremiumConnect : handleFreeChatClick}
+                                className={`w-full px-4 py-3 rounded-xl font-semibold transition-all hover:-translate-y-0.5 ${tier.buttonStyle}`}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                              >
+                                {tier.buttonText}
+                              </motion.button>
                             </div>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {/* Quick Help CTA */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mt-6"
+                      >
+                        <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/60 border border-blue-200 rounded-2xl p-6 shadow-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="font-bold text-gray-900 text-lg">{t.getHelpNow}</h3>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {userLanguage === "hindi" 
+                                  ? "तुरंत सहायता प्राप्त करें" 
+                                  : "Get immediate help"}
+                              </p>
+                            </div>
+                            <motion.button
+                              onClick={handleFreeChatClick}
+                              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-500 text-white font-semibold rounded-xl hover:shadow-lg transition"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              {t.liveChat}
+                            </motion.button>
                           </div>
                         </div>
                       </motion.div>
                     </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </section>
 
-            {/* RIGHT COLUMN */}
-            <aside className="space-y-6">
-              {/* Emergency Helplines */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeInUp}
-                transition={{ delay: 0.2 }}
-              >
-                <div className="rounded-3xl bg-gradient-to-br from-white/95 via-white to-white/95 backdrop-blur-xl border border-gray-200 shadow-xl overflow-hidden">
-                  <div className="p-5 bg-gradient-to-r from-red-500 to-pink-500">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                        <ShieldAlert className="h-5 w-5 text-white" />
+                    {/* Available Experts */}
+                    <motion.div
+                      variants={staggerContainer}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                            <Headset className="h-5 w-5 text-purple-700" />
+                          </div>
+                          {t.availableExperts}
+                        </h2>
+                        <span className="text-sm text-gray-500">
+                          {experts.filter(e => e.online).length} {t.online.toLowerCase()}
+                        </span>
                       </div>
-                      <div>
-                        <h3 className="text-xl font-extrabold text-white">
-                          {t.emergencyHelplines}
-                        </h3>
-                        <p className="text-sm text-white/90">
-                          {userLanguage === "hindi" ? "24/7 आपातकालीन सहायता" : "24/7 Emergency Support"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="p-5 space-y-4">
-                    {helplines.map((helpline, index) => (
-                      <motion.div
-                        key={helpline.title}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className={`rounded-2xl bg-gradient-to-br ${helpline.gradient} border ${helpline.border} p-4`}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
-                              {helpline.icon}
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        {experts.map((expert, index) => (
+                          <motion.div
+                            key={expert.name}
+                            variants={fadeInUp}
+                            custom={index}
+                          >
+                            <motion.div
+                              whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                              className={`rounded-2xl border ${expert.online ? 'border-emerald-200' : 'border-gray-200'} bg-white/95 backdrop-blur p-5 hover:shadow-lg transition-all cursor-pointer`}
+                              onClick={() => handleExpertClick(expert)}
+                            >
+                              <div className="flex items-start gap-4">
+                                {/* Avatar */}
+                                <div className="relative">
+                                  <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${expert.avatarColor} flex items-center justify-center`}>
+                                    <span className="text-sm font-bold text-white">
+                                      {expert.name.charAt(0)}
+                                    </span>
+                                  </div>
+                                  {expert.online && (
+                                    <motion.div
+                                      animate={{ scale: [1, 1.2, 1] }}
+                                      transition={{ duration: 2, repeat: Infinity }}
+                                      className="absolute -top-1 -right-1 h-4 w-4 bg-green-500 rounded-full border-2 border-white"
+                                    />
+                                  )}
+                                </div>
+
+                                {/* Expert Info */}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <p className="font-semibold text-gray-900 truncate">
+                                        {expert.name}
+                                      </p>
+                                      <div className="flex flex-wrap gap-2 mt-2">
+                                        {expert.tags.map((tag) => (
+                                          <span
+                                            key={tag}
+                                            className="text-[11px] font-bold px-2 py-1 rounded-full bg-gray-100 text-gray-700"
+                                          >
+                                            {tag}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    </div>
+                                    <motion.div
+                                      whileHover={{ x: 5 }}
+                                      className={`h-6 w-6 rounded-full flex items-center justify-center ${expert.online ? 'text-emerald-600' : 'text-gray-400'}`}
+                                    >
+                                      <ArrowRight className="h-4 w-4" />
+                                    </motion.div>
+                                  </div>
+
+                                  {/* Stats */}
+                                  <div className="flex items-center justify-between mt-4">
+                                    <div className="flex items-center gap-4">
+                                      <div className="flex items-center gap-1">
+                                        <Star className="h-4 w-4 text-amber-500" />
+                                        <span className="text-sm font-semibold text-gray-900">
+                                          {expert.rating.toFixed(1)}
+                                        </span>
+                                      </div>
+                                      <span className="text-xs text-gray-500">
+                                        ({expert.reviews} {t.reviews})
+                                      </span>
+                                    </div>
+                                    
+                                    <div className="text-right">
+                                      <span className={`text-xs font-semibold ${expert.online ? 'text-emerald-700' : 'text-gray-500'}`}>
+                                        {expert.online ? t.online : t.offline}
+                                      </span>
+                                      {expert.online && (
+                                        <p className="text-xs text-gray-500 mt-1">
+                                          {expert.responseTime} {userLanguage === "hindi" ? "प्रतिक्रिया" : "response"}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </section>
+
+                  {/* RIGHT COLUMN */}
+                  <aside className="space-y-6">
+                    {/* Emergency Helplines */}
+                    <motion.div
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeInUp}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <div className="rounded-3xl bg-gradient-to-br from-white/95 via-white to-white/95 backdrop-blur-xl border border-gray-200 shadow-xl overflow-hidden">
+                        <div className="p-5 bg-gradient-to-r from-red-500 to-pink-500">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                              <ShieldAlert className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                              <p className="text-sm font-bold text-gray-900">
-                                {helpline.title}
+                              <h3 className="text-xl font-extrabold text-white">
+                                {t.emergencyHelplines}
+                              </h3>
+                              <p className="text-sm text-white/90">
+                                {userLanguage === "hindi" ? "24/7 आपातकालीन सहायता" : "24/7 Emergency Support"}
                               </p>
-                              <p className="text-xs text-gray-600 mt-1 max-w-xs">
-                                {helpline.desc}
-                              </p>
-                              
-                              <div className="flex items-center gap-3 mt-3">
-                                <button
-                                  type="button"
-                                  onClick={() => speak(`${helpline.title}. ${helpline.desc}`)}
-                                  className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
-                                >
-                                  <Volume2 className="h-3 w-3" />
-                                  {t.listen}
-                                </button>
-                                
-                                <span className="text-xs font-mono font-bold text-gray-700 bg-white/50 px-2 py-1 rounded">
-                                  {helpline.number}
-                                </span>
-                              </div>
                             </div>
                           </div>
+                        </div>
 
+                        <div className="p-5 space-y-4">
+                          {helplines.map((helpline, index) => (
+                            <motion.div
+                              key={helpline.title}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.1 }}
+                              className={`rounded-2xl bg-gradient-to-br ${helpline.gradient} border ${helpline.border} p-4`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="h-10 w-10 rounded-xl bg-white border border-gray-200 flex items-center justify-center">
+                                    {helpline.icon}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-bold text-gray-900">
+                                      {helpline.title}
+                                    </p>
+                                    <p className="text-xs text-gray-600 mt-1 max-w-xs">
+                                      {helpline.desc}
+                                    </p>
+                                    
+                                    <div className="flex items-center gap-3 mt-3">
+                                      <button
+                                        type="button"
+                                        onClick={() => speak(`${helpline.title}. ${helpline.desc}`)}
+                                        className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                                      >
+                                        <Volume2 className="h-3 w-3" />
+                                        {t.listen}
+                                      </button>
+                                      
+                                      <span className="text-xs font-mono font-bold text-gray-700 bg-white/50 px-2 py-1 rounded">
+                                        {helpline.number}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <motion.button
+                                  type="button"
+                                  onClick={() => handleEmergencyCall(helpline)}
+                                  className={`px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2 ${helpline.button} flex-shrink-0`}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  <PhoneCall className="h-4 w-4" />
+                                  {t.callNow}
+                                </motion.button>
+                              </div>
+                            </motion.div>
+                          ))}
+
+                          {/* Safety Protocol */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.4 }}
+                            className="rounded-2xl bg-gradient-to-br from-emerald-50/90 to-green-50/70 border border-emerald-200 p-4"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                                <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-emerald-900">
+                                  {t.safetyProtocol}
+                                </p>
+                                <p className="text-xs text-emerald-900/80 mt-1">
+                                  {t.safetyMessage}
+                                </p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* Premium CTA */}
+                    <motion.div
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeInUp}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <motion.div
+                        animate={pulseAnimation}
+                        className="rounded-3xl bg-gradient-to-br from-amber-50/80 to-yellow-50/60 border border-amber-200 p-5 shadow-lg"
+                      >
+                        <div className="relative">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 flex items-center justify-center">
+                              <Crown className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                <Zap className="h-4 w-4 text-amber-500" />
+                                {t.premiumSupport}
+                              </p>
+                              <p className="text-xs text-gray-600 mt-1">
+                                {t.premiumDescription}
+                              </p>
+                            </div>
+                          </div>
+                          
                           <motion.button
                             type="button"
-                            onClick={() => handleEmergencyCall(helpline)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-2 ${helpline.button} flex-shrink-0`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
+                            onClick={handleUpgradeClick}
+                            className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                           >
-                            <PhoneCall className="h-4 w-4" />
-                            {t.callNow}
+                            <Crown className="h-4 w-4" />
+                            {t.upgradePremium}
                           </motion.button>
                         </div>
                       </motion.div>
-                    ))}
+                    </motion.div>
 
-                    {/* Safety Protocol */}
+                    {/* Language Info */}
                     <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                      className="rounded-2xl bg-gradient-to-br from-emerald-50/90 to-green-50/70 border border-emerald-200 p-4"
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeInUp}
+                      transition={{ delay: 0.5 }}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                          <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                      <div className="rounded-3xl bg-gradient-to-br from-emerald-50/80 to-green-50/60 border border-emerald-200 p-5 shadow-lg">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                            <Globe className="h-5 w-5 text-emerald-700" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              {userLanguage === 'hindi' ? 'भाषा: हिंदी' : 'Language: English'}
+                            </h3>
+                            <p className="text-xs text-gray-600">
+                              {userLanguage === 'hindi' ? 'पूरा ऐप हिंदी में' : 'Full app in English'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-emerald-900">
-                            {t.safetyProtocol}
-                          </p>
-                          <p className="text-xs text-emerald-900/80 mt-1">
-                            {t.safetyMessage}
-                          </p>
-                        </div>
+                        <motion.button
+                          type="button"
+                          onClick={toggleLanguage}
+                          className="w-full px-4 py-3 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <Globe className="h-4 w-4" />
+                          {userLanguage === 'hindi' ? 'Switch to English' : 'हिंदी में बदलें'}
+                        </motion.button>
                       </div>
                     </motion.div>
-                  </div>
-                </div>
-              </motion.div>
 
-              {/* Premium CTA */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeInUp}
-                transition={{ delay: 0.3 }}
-              >
-                <motion.div
-                  animate={pulseAnimation}
-                  className="rounded-3xl bg-gradient-to-br from-amber-50/80 to-yellow-50/60 border border-amber-200 p-5 shadow-lg"
-                >
-                  <div className="relative">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="h-12 w-12 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 flex items-center justify-center">
-                        <Crown className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-amber-500" />
-                          {t.premiumSupport}
-                        </p>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {t.premiumDescription}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <motion.button
-                      type="button"
-                      onClick={handleUpgradeClick}
-                      className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    {/* Support Info */}
+                    <motion.div
+                      initial="hidden"
+                      animate="visible"
+                      variants={fadeInUp}
+                      transition={{ delay: 0.6 }}
                     >
-                      <Crown className="h-4 w-4" />
-                      {t.upgradePremium}
-                    </motion.button>
-                  </div>
-                </motion.div>
-              </motion.div>
-
-              {/* Language Info */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeInUp}
-                transition={{ delay: 0.5 }}
-              >
-                <div className="rounded-3xl bg-gradient-to-br from-emerald-50/80 to-green-50/60 border border-emerald-200 p-5 shadow-lg">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                      <Globe className="h-5 w-5 text-emerald-700" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        {userLanguage === 'hindi' ? 'भाषा: हिंदी' : 'Language: English'}
-                      </h3>
-                      <p className="text-xs text-gray-600">
-                        {userLanguage === 'hindi' ? 'पूरा ऐप हिंदी में' : 'Full app in English'}
-                      </p>
-                    </div>
-                  </div>
-                  <motion.button
-                    type="button"
-                    onClick={toggleLanguage}
-                    className="w-full px-4 py-3 rounded-xl bg-white border border-emerald-200 text-emerald-700 text-sm font-semibold hover:bg-emerald-50 transition hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Globe className="h-4 w-4" />
-                    {userLanguage === 'hindi' ? 'Switch to English' : 'हिंदी में बदलें'}
-                  </motion.button>
+                      <div className="rounded-3xl bg-gradient-to-br from-blue-50/80 to-indigo-50/60 border border-blue-200 p-5 shadow-lg">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <HelpCircle className="h-5 w-5 text-blue-700" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              {userLanguage === 'hindi' ? 'तत्काल सहायता' : 'Immediate Help'}
+                            </h3>
+                            <p className="text-xs text-gray-600">
+                              {userLanguage === 'hindi' ? '24/7 चैट सहायता उपलब्ध' : '24/7 chat support available'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleFreeChatClick}
+                          className="w-full px-4 py-3 rounded-xl bg-white border border-blue-200 text-blue-700 text-sm font-semibold hover:bg-blue-50 transition hover:-translate-y-0.5"
+                        >
+                          {t.freeButton}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </aside>
                 </div>
-              </motion.div>
-
-              {/* Support Info */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={fadeInUp}
-                transition={{ delay: 0.6 }}
-              >
-                <div className="rounded-3xl bg-gradient-to-br from-blue-50/80 to-indigo-50/60 border border-blue-200 p-5 shadow-lg">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                      <HelpCircle className="h-5 w-5 text-blue-700" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-gray-900">
-                        {userLanguage === 'hindi' ? 'तत्काल सहायता' : 'Immediate Help'}
-                      </h3>
-                      <p className="text-xs text-gray-600">
-                        {userLanguage === 'hindi' ? '24/7 चैट सहायता उपलब्ध' : '24/7 chat support available'}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleFreeChatClick}
-                    className="w-full px-4 py-3 rounded-xl bg-white border border-blue-200 text-blue-700 text-sm font-semibold hover:bg-blue-50 transition hover:-translate-y-0.5"
-                  >
-                    {t.freeButton}
-                  </button>
-                </div>
-              </motion.div>
-            </aside>
-          </div>
-        </main>
+              </div>
+            </div>
+          </main>
+        </div>
 
         {/* Live Chat Modal */}
         <LiveChatModal />

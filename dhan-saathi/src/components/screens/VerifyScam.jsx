@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import { doc, onSnapshot, addDoc, collection, serverTimestamp, increment, setDoc } from 'firebase/firestore';
 import { Home, Building2, Sparkle, BookOpen, MessageSquare, IndianRupee, Globe, Bell, LogOut, UserCog, Sparkles, ShieldAlert } from 'lucide-react';
+import SpeechToTextButton from '../../components/SpeechToTextButton';
 
 // Bilingual content
 const SCAM_VERIFY_TEXT = {
@@ -696,6 +697,9 @@ const ScamVerify = () => {
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
             />
+            <div className="mt-3 flex items-center justify-end">
+              <SpeechToTextButton ariaLabel="Dictate message for scam verification" onResult={(text) => setInputText((s) => (s ? s + ' ' + text : text))} lang={userLanguage === 'hindi' ? 'hi-IN' : 'en-IN'} />
+            </div>
 
             <button
               className={`mt-6 w-full py-3 px-6 rounded-xl font-semibold text-white transition-all flex items-center justify-center gap-2 ${

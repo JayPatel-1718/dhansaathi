@@ -11,9 +11,12 @@ import {
     MessageSquare,
     Info,
     RefreshCw,
-    X
+    X,
+    Lightbulb,
+    DollarSign,
+    TrendingUp
 } from 'lucide-react';
-import { SCHEME_DB, GENERAL_FAQS, analyzeQuery, OCCUPATIONS } from '../utils/chatbotUtils';
+import { SCHEME_DB, GENERAL_FAQS, analyzeQuery, OCCUPATIONS, FINANCIAL_GLOSSARY, INVESTMENT_GLOSSARY, INVESTMENT_TIPS } from '../utils/chatbotUtils';
 import '../../styles/chatbot.css';
 
 const ChatMessage = ({ msg, onSchemeClick }) => {
@@ -53,6 +56,42 @@ const ChatMessage = ({ msg, onSchemeClick }) => {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {msg.type === 'investment_tips' && msg.recommendations && (
+                    <div className="chatbot-tips-list">
+                        {msg.recommendations.map((tip, idx) => (
+                            <div key={idx} className="investment-tip-item">
+                                <p style={{ margin: '8px 0', lineHeight: '1.4' }}>{tip}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {(msg.type === 'financial_term' || msg.type === 'investment_term') && (
+                    <div className="chatbot-definition-box" style={{
+                        backgroundColor: msg.type === 'financial_term' ? '#f0f9ff' : '#f0fdf4',
+                        border: `2px solid ${msg.type === 'financial_term' ? '#03a9f4' : '#22c55e'}`,
+                        borderRadius: '8px',
+                        padding: '12px',
+                        marginTop: '8px',
+                        fontSize: '0.95em',
+                        lineHeight: '1.5'
+                    }}>
+                        {msg.text}
+                    </div>
+                )}
+
+                {msg.type === 'financial_guidance' && (
+                    <div className="chatbot-financial-guide" style={{
+                        backgroundColor: '#f3f4f6',
+                        border: '2px solid #9ca3af',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        marginTop: '8px'
+                    }}>
+                        <p style={{ margin: '0', fontSize: '0.95em', lineHeight: '1.5' }}>{msg.text}</p>
                     </div>
                 )}
 

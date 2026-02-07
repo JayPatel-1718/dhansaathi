@@ -532,9 +532,12 @@ const DashboardScreen = () => {
           className="flex items-center gap-2.5 cursor-pointer"
           onClick={goHome}
         >
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-green-200/50 flex-shrink-0">
-            <IndianRupee className="h-5 w-5 text-white" />
-          </div>
+          <img
+  src="/Dhaansaathi.jpeg"
+  alt="DhanSaathi Logo"
+  className="h-12 w-12 object-contain"
+/>
+
           {!collapsed && (
             <span className="text-xl font-bold tracking-tight text-gray-900">
               {t.appName}

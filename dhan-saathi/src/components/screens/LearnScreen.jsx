@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+// src/components/screens/LearnScreen.jsx
+
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "../../firebase";
@@ -40,6 +42,11 @@ import {
   PiggyBank,
   TrendingUp as TrendingUpIcon,
   BanknoteIcon,
+  ChevronLeft,
+  Menu,
+  UserCog,
+  Globe,
+  ChevronLeft as ChevronLeftIcon,
 } from "lucide-react";
 
 // Firebase storage keys
@@ -1178,12 +1185,46 @@ const LESSONS = [
 
 const DEFAULT_SAFETY_TIP = "Enable Two-Factor Authentication (2FA) on your UPI apps and email. It's the strongest shield against account takeovers.";
 
+// Bilingual content for sidebar
+const LEARN_TEXT = {
+  hindi: {
+    appName: "धनसाथी",
+    home: "होम",
+    schemes: "सरकारी योजनाएं",
+    community: "समुदाय",
+    learn: "सीखें",
+    help: "सहायता",
+    logout: "लॉग आउट",
+    signin: "साइन इन",
+    profile: "प्रोफाइल",
+    settings: "सेटिंग्स",
+    collapseSidebar: "साइडबार छोटा करें",
+  },
+  english: {
+    appName: "DhanSaathi",
+    home: "Home",
+    schemes: "Schemes",
+    community: "Community",
+    learn: "Learn",
+    help: "Help",
+    logout: "Logout",
+    signin: "Sign in",
+    profile: "Profile",
+    settings: "Settings",
+    collapseSidebar: "Collapse sidebar",
+  },
+};
+
 export default function LearnScreen() {
   const navigate = useNavigate();
   const [mouse, setMouse] = useState({ x: 300, y: 200 });
   const [fbUser, setFbUser] = useState(null);
   const [profile, setProfile] = useState({});
-  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const menuRef = useRef(null);
 
   // User learning data
   const [saved, setSaved] = useState(() => readJSON(LS.saved, []));
@@ -1224,6 +1265,12 @@ export default function LearnScreen() {
   const [moduleQuizSubmitted, setModuleQuizSubmitted] = useState(false);
   const [voiceQuizActive, setVoiceQuizActive] = useState(false);
   const [voiceResponse, setVoiceResponse] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Language
+  const userLanguage = localStorage.getItem("dhan-saathi-language") || "english";
+  const [language, setLanguage] = useState(userLanguage);
+  const t = LEARN_TEXT[language];
 
   // Calculate module progress
   const moduleLessons = LESSONS.filter(l => l.module === activeModule.id);
@@ -1431,6 +1478,25 @@ export default function LearnScreen() {
   useEffect(() => {
     localStorage.setItem(LS.currentModule, currentModuleId);
   }, [currentModuleId]);
+
+  // Close mobile sidebar on resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setMobileSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const onDown = (e) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, []);
 
   const appLang = localStorage.getItem("dhan-saathi-language") || "english";
   const ttsLang = appLang === "hindi" ? "hi-IN" : "en-IN";
@@ -1805,6 +1871,237 @@ export default function LearnScreen() {
     }
   };
 
+  // Navigation helpers
+  const goHome = () => navigate("/home");
+  const goToSchemes = () => navigate("/schemes");
+  const goToCommunity = () => navigate("/community");
+  const goToLearn = () => navigate("/learn");
+  const goToHelp = () => navigate("/help");
+  const goToProfile = () => navigate("/profile");
+
+  // Toggle language
+  const toggleLanguage = () => {
+    const newLang = language === "hindi" ? "english" : "hindi";
+    setLanguage(newLang);
+    localStorage.setItem("dhan-saathi-language", newLang);
+  };
+
+  // Sidebar nav items
+  const sidebarNavItems = [
+    { label: t.home, icon: Home, onClick: goHome },
+    { label: t.schemes, icon: Building2, onClick: goToSchemes },
+    { label: t.community, icon: Sparkle, onClick: goToCommunity },
+    { label: t.learn, icon: BookOpen, onClick: goToLearn, active: true },
+    { label: t.help, icon: HelpCircle, onClick: goToHelp },
+  ];
+
+  const sidebarBottomItems = [
+    {
+      label: t.profile,
+      icon: UserCog,
+      onClick: goToProfile,
+    },
+    {
+      label: language === "hindi" ? "भाषा बदलें" : "Language",
+      icon: Globe,
+      onClick: toggleLanguage,
+    },
+  ];
+
+  // Sidebar component
+  const SidebarContent = ({ collapsed = false, onClose = null }) => (
+    <div className="flex flex-col h-full">
+      {/* Logo */}
+      <div
+        className={`flex items-center ${
+          collapsed ? "justify-center" : "justify-between"
+        } px-4 py-5 border-b border-gray-100`}
+      >
+        <div
+          className="flex items-center gap-2.5 cursor-pointer"
+          onClick={goHome}
+        >
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-700 flex items-center justify-center shadow-lg shadow-green-200/50 flex-shrink-0">
+            <IndianRupee className="h-5 w-5 text-white" />
+          </div>
+          {!collapsed && (
+            <span className="text-xl font-bold tracking-tight text-gray-900">
+              {t.appName}
+            </span>
+          )}
+        </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* User card */}
+      <div
+        className={`mx-3 mt-4 mb-2 ${
+          collapsed ? "px-1" : "px-3"
+        } py-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-green-50 border border-emerald-100`}
+      >
+        <div
+          className={`flex ${
+            collapsed ? "justify-center" : "items-center gap-3"
+          }`}
+        >
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-white font-bold text-sm shadow flex-shrink-0">
+            {fbUser?.photoURL ? (
+              <img
+                src={fbUser.photoURL}
+                alt=""
+                className="h-full w-full rounded-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              initials
+            )}
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">
+                {displayName}
+              </p>
+              <p className="text-[11px] text-gray-500 truncate">{email}</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main nav */}
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+        <p
+          className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest ${
+            collapsed ? "text-center" : "px-3"
+          } mb-2`}
+        >
+          {collapsed ? "—" : language === "hindi" ? "मुख्य मेनू" : "Main Menu"}
+        </p>
+
+        {sidebarNavItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              onClick={() => {
+                item.onClick();
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center ${
+                collapsed ? "justify-center" : ""
+              } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group ${
+                item.active
+                  ? "bg-emerald-100 text-emerald-800 shadow-sm"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              }`}
+              title={collapsed ? item.label : undefined}
+            >
+              <Icon
+                className={`h-5 w-5 flex-shrink-0 ${
+                  item.active
+                    ? "text-emerald-600"
+                    : "text-gray-400 group-hover:text-gray-600"
+                }`}
+              />
+              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && item.active && (
+                <div className="ml-auto h-2 w-2 rounded-full bg-emerald-500" />
+              )}
+            </button>
+          );
+        })}
+
+        <div className="my-4 border-t border-gray-100" />
+
+        <p
+          className={`text-[10px] font-bold text-gray-400 uppercase tracking-widest ${
+            collapsed ? "text-center" : "px-3"
+          } mb-2`}
+        >
+          {collapsed
+            ? "—"
+            : language === "hindi"
+            ? "अन्य"
+            : "Others"}
+        </p>
+
+        {sidebarBottomItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.label}
+              onClick={() => {
+                item.onClick();
+                setMobileSidebarOpen(false);
+              }}
+              className={`w-full flex items-center ${
+                collapsed ? "justify-center" : ""
+              } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all group`}
+              title={collapsed ? item.label : undefined}
+            >
+              <Icon className="h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-600" />
+              {!collapsed && <span>{item.label}</span>}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Bottom section */}
+      <div className="px-3 pb-4 space-y-2 border-t border-gray-100 pt-3">
+        {/* Collapse toggle (desktop only) */}
+        <button
+          onClick={() => setSidebarOpen((v) => !v)}
+          className={`hidden lg:flex w-full items-center ${
+            collapsed ? "justify-center" : ""
+          } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all`}
+          title={t.collapseSidebar}
+        >
+          <ChevronLeft
+            className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 ${
+              collapsed ? "rotate-180" : ""
+            }`}
+          />
+          {!collapsed && (
+            <span>
+              {language === "hindi" ? "छोटा करें" : "Collapse"}
+            </span>
+          )}
+        </button>
+
+        {/* Logout */}
+        {fbUser ? (
+          <button
+            onClick={handleLogout}
+            className={`w-full flex items-center ${
+              collapsed ? "justify-center" : ""
+            } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 transition-all`}
+            title={collapsed ? t.logout : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span>{t.logout}</span>}
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate("/signup")}
+            className={`w-full flex items-center ${
+              collapsed ? "justify-center" : ""
+            } gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-green-700 hover:bg-green-50 transition-all`}
+            title={collapsed ? t.signin : undefined}
+          >
+            <LogOut className="h-5 w-5 flex-shrink-0 rotate-180" />
+            {!collapsed && <span>{t.signin}</span>}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <>
       <style>{`
@@ -1867,122 +2164,131 @@ export default function LearnScreen() {
         }
       `}</style>
 
-      <div
-        className="min-h-screen relative overflow-hidden bg-[#F4FAF3]"
-        onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
-        style={{
-          backgroundImage: `
-            radial-gradient(900px circle at ${mouse.x}px ${mouse.y}px, rgba(16,185,129,0.14), transparent 42%),
-            radial-gradient(circle at top left, rgba(187,247,208,0.55) 0, transparent 60%),
-            radial-gradient(circle at bottom right, rgba(191,219,254,0.45) 0, transparent 60%)
-          `,
-        }}
-      >
-        {/* Background blobs */}
-        <div className="pointer-events-none absolute -top-48 -left-48 h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(34,197,94,0.40)_0%,rgba(16,185,129,0.16)_38%,transparent_70%)] blur-3xl opacity-90 mix-blend-multiply animate-[blobA_18s_ease-in-out_infinite]" />
-        <div className="pointer-events-none absolute top-[25%] -right-56 h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(16,185,129,0.36)_0%,rgba(59,130,246,0.14)_42%,transparent_72%)] blur-3xl opacity-80 mix-blend-multiply animate-[blobB_22s_ease-in-out_infinite]" />
+      <div className="flex h-screen overflow-hidden bg-gray-50">
+        {/* ═══ MOBILE SIDEBAR OVERLAY ═══ */}
+        {mobileSidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+        )}
 
-        {/* NAVBAR */}
-        <header className="w-full bg-white/80 backdrop-blur-xl border-b border-gray-200 sticky top-0 z-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-xl bg-green-600 flex items-center justify-center shadow-md">
-                <IndianRupee className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-gray-900">
-                DhanSaathi
-              </span>
-            </div>
+        {/* ═══ MOBILE SIDEBAR ═══ */}
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-100 shadow-2xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <SidebarContent onClose={() => setMobileSidebarOpen(false)} />
+        </aside>
 
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-700">
-              <button
-                type="button"
-                onClick={() => navigate("/home")}
-                className="flex items-center gap-1.5 hover:text-emerald-700 transition group"
-              >
-                <Home className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                Home
-              </button>
+        {/* ═══ DESKTOP SIDEBAR ═══ */}
+        <aside
+          className={`hidden lg:flex flex-col flex-shrink-0 bg-white border-r border-gray-100 transition-all duration-300 ease-in-out ${
+            sidebarOpen ? "w-64" : "w-20"
+          }`}
+        >
+          <SidebarContent collapsed={!sidebarOpen} />
+        </aside>
 
-              <button
-                type="button"
-                onClick={() => navigate("/schemes")}
-                className="flex items-center gap-1.5 hover:text-emerald-700 transition group"
-              >
-                <Building2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                Schemes
-              </button>
-
-              <button
-                type="button"
-                onClick={() => navigate("/community")}
-                className="flex items-center gap-1.5 hover:text-emerald-700 transition group"
-              >
-                <Sparkle className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                Community
-              </button>
-
-              <button
-                type="button"
-                className="relative text-emerald-700 font-semibold flex items-center gap-1.5 group"
-              >
-                <BookOpen className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                Learn
-                <span className="absolute -bottom-1 left-0 right-0 h-0.5 rounded-full bg-emerald-600" />
-              </button>
-
-              <button
-                type="button"
-                className="flex items-center gap-1.5 hover:text-emerald-700 transition group"
-                onClick={() => navigate("/help")}
-              >
-                <MessageSquare className="h-4 w-4 group-hover:scale-110 transition-transform" />
-                Help
-              </button>
-            </nav>
-
-            <div className="flex items-center gap-3">
-              {/* Points Display */}
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200">
-                <div className="h-6 w-6 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 grid place-items-center">
-                  <Star className="h-3 w-3 text-white" />
+        {/* ═══ MAIN AREA ═══ */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* ═══ TOP BAR ═══ */}
+          <header className="flex-shrink-0 bg-white/80 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-20">
+            <div className="px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+              {/* Left: hamburger + page title */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setMobileSidebarOpen(true)}
+                  className="lg:hidden h-10 w-10 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 hover:bg-gray-50 transition"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div>
+                  <h1 className="text-lg sm:text-xl font-bold text-gray-900">
+                    {t.learn}
+                  </h1>
+                  <p className="text-xs text-gray-500 hidden sm:block">
+                    {language === "hindi"
+                      ? "वित्तीय साक्षरता सीखें"
+                      : "Learn Financial Literacy"}
+                  </p>
                 </div>
-                <span className="text-sm font-bold text-amber-800">{points} pts</span>
               </div>
 
-              <button
-                type="button"
-                className="hidden sm:inline-flex h-10 w-10 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow-sm items-center justify-center text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
-                title="Notifications"
-                onClick={() => alert("Notifications coming soon")}
-              >
-                <Bell className="h-5 w-5" />
-              </button>
-
-              {/* Profile dropdown */}
-              <div className="relative">
+              {/* Right: lang + notification + profile */}
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setMenuOpen(!menuOpen)}
-                  className="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-emerald-400 to-green-500 shadow flex items-center justify-center text-white font-semibold hover:shadow-lg transition-shadow"
+                  onClick={toggleLanguage}
+                  className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
                 >
-                  {fbUser?.photoURL ? (
-                    <img
-                      src={fbUser.photoURL}
-                      alt="Profile"
-                      className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <span className="text-sm">{initials}</span>
-                  )}
+                  <Globe className="h-4 w-4" />
+                  <span className="text-xs font-medium">
+                    {language === "hindi" ? "हिंदी" : "English"}
+                  </span>
+                  <span className="text-xs text-gray-500">⇄</span>
                 </button>
 
-                {menuOpen && (
-                  <div className="absolute right-0 mt-3 w-72 rounded-2xl bg-white/90 backdrop-blur border border-gray-200 shadow-xl overflow-hidden z-50">
+                {/* Points Display */}
+                <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 border border-amber-200">
+                  <div className="h-6 w-6 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 grid place-items-center">
+                    <Star className="h-3 w-3 text-white" />
+                  </div>
+                  <span className="text-sm font-bold text-amber-800">{points} pts</span>
+                </div>
+
+                <button
+                  type="button"
+                  className="h-10 w-10 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 hover:bg-gray-50 transition relative"
+                  onClick={() =>
+                    alert(
+                      language === "hindi"
+                        ? "जल्द ही आ रहा है"
+                        : "Notifications coming soon"
+                    )
+                  }
+                >
+                  <Bell className="h-5 w-5" />
+                  <div className="absolute top-1.5 right-1.5 h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-white" />
+                </button>
+
+                {/* Profile mini-dropdown */}
+                <div className="relative" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((v) => !v)}
+                    className="h-10 w-10 rounded-full overflow-hidden bg-gradient-to-br from-green-400 to-emerald-500 shadow flex items-center justify-center text-white font-semibold"
+                  >
+                    {fbUser?.photoURL ? (
+                      <img
+                        src={fbUser.photoURL}
+                        alt="Profile"
+                        className="h-full w-full object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </button>
+
+                  <div
+                    className={`absolute right-0 mt-3 w-72 rounded-2xl bg-white/95 backdrop-blur border border-gray-200 shadow-xl overflow-hidden origin-top-right transition-all duration-200 ${
+                      menuOpen
+                        ? "opacity-100 scale-100 translate-y-0"
+                        : "pointer-events-none opacity-0 scale-95 -translate-y-2"
+                    }`}
+                  >
                     <div className="px-4 py-4">
-                      <p className="text-sm font-semibold text-gray-900">{displayName}</p>
-                      <p className="text-xs text-gray-600 mt-1 break-all">{email || "Guest mode"}</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {displayName}
+                      </p>
+                      <p className="text-xs text-gray-600 mt-1 break-all">
+                        {email ||
+                          (language === "hindi"
+                            ? "साइन इन नहीं"
+                            : "Not signed in")}
+                      </p>
                       <div className="mt-2 flex items-center gap-2 text-xs">
                         <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full">
                           {doneCount} lessons
@@ -1997,813 +2303,841 @@ export default function LearnScreen() {
                         )}
                       </div>
                     </div>
-
                     <div className="h-px bg-gray-100" />
-
+                    <button
+                      onClick={() => {
+                        navigate("/profile");
+                        setMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <UserCog className="h-4 w-4 text-gray-400" />
+                      {language === "hindi" ? "प्रोफाइल देखें" : "View Profile"}
+                    </button>
+                    <div className="h-px bg-gray-100" />
                     {fbUser ? (
                       <button
-                        type="button"
                         className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                         onClick={handleLogout}
                       >
-                        <LogOut className="h-4 w-4" /> Logout
+                        <LogOut className="h-4 w-4" />
+                        {t.logout}
                       </button>
                     ) : (
                       <button
-                        type="button"
-                        className="w-full px-4 py-3 text-left text-sm text-emerald-700 hover:bg-emerald-50"
+                        className="w-full px-4 py-3 text-left text-sm text-green-700 hover:bg-green-50"
                         onClick={() => navigate("/signup")}
                       >
-                        Sign in to save progress
+                        {t.signin}
                       </button>
                     )}
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* PAGE */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-          {/* Header */}
-          <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur-xl border border-emerald-200 shadow-[0_28px_80px_rgba(15,23,42,0.12)] p-6 sm:p-8 mb-8">
-            {/* Sheen overlay */}
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/70 to-transparent blur-xl animate-[sheen_8s_ease-in-out_infinite]" />
-            </div>
-
-            <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
-                  Learn Financial Basics
-                </h1>
-                <p className="text-gray-600 mt-2 max-w-2xl">
-                  Master money management with curated lessons across {MODULES.length} modules. {fbUser ? "Your progress syncs across devices." : "Sign in to save your progress."}
-                </p>
-                
-                <div className="mt-4 flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-emerald-600" />
-                    <span className="text-sm font-medium text-gray-700">{displayName}</span>
-                  </div>
-                  <div className="h-4 w-px bg-gray-300" />
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-emerald-600" />
-                    <span className="text-sm font-medium text-gray-700">{doneCount}/{totalCount} completed</span>
-                  </div>
-                  <div className="h-4 w-px bg-gray-300" />
-                  <div className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-amber-500" />
-                    <span className="text-sm font-medium text-gray-700">{points} points</span>
-                  </div>
-                  {badges.length > 0 && (
-                    <>
-                      <div className="h-4 w-px bg-gray-300" />
-                      <div className="flex items-center gap-2">
-                        <Award className="h-5 w-5 text-yellow-600" />
-                        <span className="text-sm font-medium text-gray-700">{badges.length} badge{badges.length !== 1 ? 's' : ''}</span>
-                      </div>
-                    </>
-                  )}
                 </div>
               </div>
+            </div>
+          </header>
 
-              <div className="flex flex-col items-end gap-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">{doneCount}/{totalCount}</span> completed
-                  </span>
-                  <div className="h-2 w-36 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-full transition-all"
-                      style={{ width: `${pct}%` }}
+          {/* ═══ SCROLLABLE CONTENT ═══ */}
+          <main
+            className="flex-1 overflow-y-auto"
+            onMouseMove={(e) => setMouse({ x: e.clientX, y: e.clientY })}
+          >
+            <div
+              className="min-h-full relative"
+              style={{
+                backgroundImage: `
+                  radial-gradient(800px circle at ${mouse.x}px ${mouse.y}px, rgba(16,185,129,0.08), transparent 42%),
+                  radial-gradient(circle at top left, rgba(187,247,208,0.35) 0, transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(191,219,254,0.3) 0, transparent 55%)
+                `,
+              }}
+            >
+              {/* Blobs */}
+              <div className="pointer-events-none absolute -top-48 -left-48 h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(34,197,94,0.25)_0%,rgba(16,185,129,0.08)_38%,transparent_70%)] blur-3xl opacity-90 mix-blend-multiply animate-[blobA_18s_ease-in-out_infinite]" />
+              <div className="pointer-events-none absolute top-[25%] -right-56 h-[620px] w-[620px] rounded-full bg-[radial-gradient(circle_at_40%_40%,rgba(16,185,129,0.20)_0%,rgba(59,130,246,0.08)_42%,transparent_72%)] blur-3xl opacity-80 mix-blend-multiply animate-[blobB_22s_ease-in-out_infinite]" />
+
+              <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
+                {/* Header */}
+                <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur-xl border border-emerald-200 shadow-[0_28px_80px_rgba(15,23,42,0.12)] p-6 sm:p-8 mb-8">
+                  {/* Sheen overlay */}
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/70 to-transparent blur-xl animate-[sheen_8s_ease-in-out_infinite]" />
+                  </div>
+
+                  <div className="relative flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                    <div>
+                      <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
+                        Learn Financial Basics
+                      </h1>
+                      <p className="text-gray-600 mt-2 max-w-2xl">
+                        Master money management with curated lessons across {MODULES.length} modules. {fbUser ? "Your progress syncs across devices." : "Sign in to save your progress."}
+                      </p>
+                      
+                      <div className="mt-4 flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <User className="h-5 w-5 text-emerald-600" />
+                          <span className="text-sm font-medium text-gray-700">{displayName}</span>
+                        </div>
+                        <div className="h-4 w-px bg-gray-300" />
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-5 w-5 text-emerald-600" />
+                          <span className="text-sm font-medium text-gray-700">{doneCount}/{totalCount} completed</span>
+                        </div>
+                        <div className="h-4 w-px bg-gray-300" />
+                        <div className="flex items-center gap-2">
+                          <Star className="h-5 w-5 text-amber-500" />
+                          <span className="text-sm font-medium text-gray-700">{points} points</span>
+                        </div>
+                        {badges.length > 0 && (
+                          <>
+                            <div className="h-4 w-px bg-gray-300" />
+                            <div className="flex items-center gap-2">
+                              <Award className="h-5 w-5 text-yellow-600" />
+                              <span className="text-sm font-medium text-gray-700">{badges.length} badge{badges.length !== 1 ? 's' : ''}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm text-gray-600">
+                          <span className="font-semibold text-gray-900">{doneCount}/{totalCount}</span> completed
+                        </span>
+                        <div className="h-2 w-36 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-full transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      
+                      {fbUser && (
+                        <div className="text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                          🔄 Synced to cloud
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* MODULES SELECTOR */}
+                <div className="mb-8">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-gray-900">Available Modules</h2>
+                    <span className="text-sm text-gray-600">{MODULES.length} modules • All free</span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {MODULES.map((module, index) => {
+                      const isActive = activeModule.id === module.id;
+                      const moduleProgressData = moduleProgress[module.id] || { completedLessons: 0 };
+                      const progressPercentage = (moduleProgressData.completedLessons / module.totalLessons) * 100;
+                      const moduleLessonsCount = LESSONS.filter(l => l.module === module.id).length;
+                      const completedInThisModule = moduleLessonsCount > 0 ? 
+                        moduleLessons.filter(l => completed.has(l.id)).length : 0;
+                      
+                      return (
+                        <button
+                          key={module.id}
+                          type="button"
+                          onClick={() => handleModuleChange(module.id)}
+                          className={`relative overflow-hidden rounded-2xl border p-5 text-left transition-all hover:-translate-y-1 ${isActive ? 'border-emerald-300 bg-white shadow-lg' : 'border-gray-200 bg-white/70 hover:border-emerald-200 hover:shadow-md'}`}
+                        >
+                          <div className="flex items-start gap-4">
+                            <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${getAccentColorClass(module)} border ${isActive ? 'border-white' : 'border-gray-200'} shadow flex items-center justify-center`}>
+                              {getModuleIcon(module)}
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs font-bold px-2 py-1 rounded-full ${getAccentBgClass(module)}`}>
+                                  {appLang === 'hindi' ? module.badgeHi : module.badge}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {completedInThisModule}/{module.totalLessons}
+                                </span>
+                              </div>
+                              
+                              <h3 className="font-bold text-gray-900 mt-2">
+                                {appLang === 'hindi' ? module.titleHi : module.titleEn}
+                              </h3>
+                              
+                              <div className="mt-2 flex items-center gap-3 text-xs text-gray-600">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3" /> ~{module.totalDuration} min
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <Star className="h-3 w-3 text-amber-500" /> {module.pointsToEarn} pts
+                                </span>
+                                {module.isFree && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="text-emerald-700 font-semibold">FREE</span>
+                                  </>
+                                )}
+                              </div>
+                              
+                              <div className="mt-3">
+                                <div className="flex items-center justify-between text-xs mb-1">
+                                  <span className="text-gray-600">Progress</span>
+                                  <span className="font-semibold text-emerald-700">{progressPercentage.toFixed(0)}%</span>
+                                </div>
+                                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                  <div 
+                                    className="h-1.5 rounded-full transition-all"
+                                    style={{ 
+                                      width: `${progressPercentage}%`,
+                                      background: `linear-gradient(to right, ${module.accentColor === 'blue' ? '#3b82f6' : module.accentColor === 'purple' ? '#8b5cf6' : '#10b981'}, ${module.accentColor === 'blue' ? '#60a5fa' : module.accentColor === 'purple' ? '#a78bfa' : '#34d399'})`
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {isActive && (
+                            <div className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-emerald-500 border border-white" />
+                          )}
+                          
+                          {module.isFeatured && (
+                            <div className="absolute -top-2 -left-2 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-yellow-500 text-xs font-bold text-white">
+                              Featured
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ACTIVE MODULE DETAILS */}
+                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-blue-50 to-cyan-100 border border-emerald-200 shadow-[0_28px_80px_rgba(15,23,42,0.15)] p-6 sm:p-8 mb-8">
+                  <div className="pointer-events-none absolute inset-0">
+                    <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_10s_ease-in-out_infinite]" />
+                  </div>
+
+                  <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${getAccentColorClass(activeModule)} border ${activeModule.accentColor === 'emerald' ? 'border-emerald-300' : activeModule.accentColor === 'blue' ? 'border-blue-300' : 'border-purple-300'} shadow-lg grid place-items-center`}>
+                          {getModuleIcon(activeModule)}
+                        </div>
+                        <div>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full ${getAccentBgClass(activeModule)} text-xs font-bold`}>
+                            {appLang === 'hindi' ? activeModule.badgeHi : activeModule.badge}
+                          </span>
+                          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">
+                            {appLang === 'hindi' ? activeModule.titleHi : activeModule.titleEn}
+                          </h2>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-700 mb-6">
+                        {appLang === 'hindi' ? activeModule.descriptionHi : activeModule.descriptionEn}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div className="flex items-center gap-2">
+                          <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
+                            <Target className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{activeModule.totalLessons} Lessons</p>
+                            <p className="text-xs text-gray-600">Step-by-step curriculum</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
+                            <HelpCircle className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{activeModule.totalLessons} Quizzes</p>
+                            <p className="text-xs text-gray-600">Test your knowledge</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
+                            <Clock className="h-5 w-5 text-emerald-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">~{activeModule.totalDuration} min</p>
+                            <p className="text-xs text-gray-600">Total duration</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
+                            <Star className="h-5 w-5 text-amber-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{activeModule.pointsToEarn} Points</p>
+                            <p className="text-xs text-gray-600">Available to earn</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <button
+                          type="button"
+                          onClick={startModuleLearning}
+                          className={`px-6 py-3 rounded-full bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2 animate-pulseGlow`}
+                        >
+                          {completedInModule > 0 ? 'Continue Learning' : 'Start Learning'} 
+                          <ArrowRight className="h-5 w-5" />
+                        </button>
+                        {isModuleComplete && (
+                          <button
+                            type="button"
+                            onClick={() => setShowModuleQuiz(true)}
+                            className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                          >
+                            Take Final Quiz
+                          </button>
+                        )}
+                        {activeModule.id === "grow-your-money-wisely" && isModuleComplete && (
+                          <div className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-300 text-purple-800 text-sm font-bold">
+                            🎉 Last Free Module Completed!
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="relative h-48 w-48">
+                        <svg viewBox="0 0 120 120" className="h-full w-full progress-ring">
+                          <circle cx="60" cy="60" r="46" stroke="#E5E7EB" strokeWidth="12" fill="none" />
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="46"
+                            stroke={activeModule.accentColor === 'blue' ? '#3b82f6' : activeModule.accentColor === 'purple' ? '#8b5cf6' : '#10B981'}
+                            strokeWidth="12"
+                            fill="none"
+                            strokeLinecap="round"
+                            className="progress-ring-circle"
+                            strokeDasharray={2 * Math.PI * 46}
+                            strokeDashoffset={2 * Math.PI * 46 * (1 - moduleProgressPercentage / 100)}
+                            style={{ transition: "stroke-dashoffset 600ms ease" }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <p className="text-3xl font-extrabold text-gray-900">
+                            {completedInModule}/{activeModule.totalLessons}
+                          </p>
+                          <p className="text-sm text-gray-600 font-semibold">LESSONS DONE</p>
+                          <p className="text-xs text-emerald-600 mt-2 font-bold">
+                            {moduleProgressPercentage.toFixed(0)}% Complete
+                          </p>
+                        </div>
+                      </div>
+                      {isModuleComplete && badges.includes(activeModule.badgeUnlocked) && (
+                        <div className="mt-4 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 flex items-center gap-2">
+                          <Award className="h-4 w-4 text-yellow-700" />
+                          <span className="text-sm font-bold text-yellow-800">
+                            {appLang === 'hindi' ? activeModule.badgeUnlockedHi : activeModule.badgeUnlocked} Unlocked!
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Categories + Search */}
+                <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
+                  <div className="flex flex-wrap gap-2">
+                    {categories.slice(0, 8).map((c) => {
+                      const active = activeCat === c;
+                      return (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setActiveCat(c)}
+                          className={
+                            active
+                              ? "px-4 py-2 rounded-full bg-gradient-to-r from-emerald-600 to-green-500 text-white text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
+                              : "px-4 py-2 rounded-full bg-white/75 backdrop-blur border border-gray-200 text-sm text-gray-700 hover:border-emerald-300 hover:text-emerald-700 transition-all hover:-translate-y-0.5"
+                          }
+                        >
+                          {c}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex-1" />
+
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/85 backdrop-blur border border-gray-200 shadow-sm w-full lg:w-[360px] hover:shadow-md transition-shadow">
+                    <Search className="h-4 w-4 text-gray-400" />
+                    <input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search lessons..."
+                      className="bg-transparent outline-none text-sm text-gray-700 flex-1"
                     />
                   </div>
                 </div>
-                
-                {fbUser && (
-                  <div className="text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                    🔄 Synced to cloud
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* MODULES SELECTOR */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Available Modules</h2>
-              <span className="text-sm text-gray-600">{MODULES.length} modules • All free</span>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {MODULES.map((module, index) => {
-                const isActive = activeModule.id === module.id;
-                const moduleProgressData = moduleProgress[module.id] || { completedLessons: 0 };
-                const progressPercentage = (moduleProgressData.completedLessons / module.totalLessons) * 100;
-                const moduleLessonsCount = LESSONS.filter(l => l.module === module.id).length;
-                const completedInThisModule = moduleLessonsCount > 0 ? 
-                  moduleLessons.filter(l => completed.has(l.id)).length : 0;
-                
-                return (
-                  <button
-                    key={module.id}
-                    type="button"
-                    onClick={() => handleModuleChange(module.id)}
-                    className={`relative overflow-hidden rounded-2xl border p-5 text-left transition-all hover:-translate-y-1 ${isActive ? 'border-emerald-300 bg-white shadow-lg' : 'border-gray-200 bg-white/70 hover:border-emerald-200 hover:shadow-md'}`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${getAccentColorClass(module)} border ${isActive ? 'border-white' : 'border-gray-200'} shadow flex items-center justify-center`}>
-                        {getModuleIcon(module)}
+                {/* Main grid */}
+                <div className="mt-6 grid gap-6 lg:grid-cols-[2.1fr,1fr]">
+                  {/* LEFT */}
+                  <section className="space-y-6">
+                    {/* Module Curriculum */}
+                    <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-[0_28px_80px_rgba(15,23,42,0.08)] p-6">
+                      <div className="pointer-events-none absolute inset-0">
+                        <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/70 to-transparent blur-xl animate-[sheen_8s_ease-in-out_infinite]" />
                       </div>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${getAccentBgClass(module)}`}>
-                            {appLang === 'hindi' ? module.badgeHi : module.badge}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {completedInThisModule}/{module.totalLessons}
-                          </span>
+
+                      <div className="relative flex items-center justify-between mb-6">
+                        <div>
+                          <p className="text-sm font-bold text-emerald-700 uppercase tracking-wide">MODULE CURRICULUM</p>
+                          <h3 className="text-xl font-extrabold text-gray-900 mt-1">
+                            {appLang === 'hindi' ? "पाठ्यक्रम की रूपरेखा" : "Course Outline"} • {activeModule.titleEn}
+                          </h3>
                         </div>
-                        
-                        <h3 className="font-bold text-gray-900 mt-2">
-                          {appLang === 'hindi' ? module.titleHi : module.titleEn}
-                        </h3>
-                        
-                        <div className="mt-2 flex items-center gap-3 text-xs text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> ~{module.totalDuration} min
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {completedInModule} of {activeModule.totalLessons} completed
                           </span>
-                          <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Star className="h-3 w-3 text-amber-500" /> {module.pointsToEarn} pts
-                          </span>
-                          {module.isFree && (
-                            <>
-                              <span>•</span>
-                              <span className="text-emerald-700 font-semibold">FREE</span>
-                            </>
-                          )}
-                        </div>
-                        
-                        <div className="mt-3">
-                          <div className="flex items-center justify-between text-xs mb-1">
-                            <span className="text-gray-600">Progress</span>
-                            <span className="font-semibold text-emerald-700">{progressPercentage.toFixed(0)}%</span>
-                          </div>
-                          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div 
-                              className="h-1.5 rounded-full transition-all"
-                              style={{ 
-                                width: `${progressPercentage}%`,
-                                background: `linear-gradient(to right, ${module.accentColor === 'blue' ? '#3b82f6' : module.accentColor === 'purple' ? '#8b5cf6' : '#10b981'}, ${module.accentColor === 'blue' ? '#60a5fa' : module.accentColor === 'purple' ? '#a78bfa' : '#34d399'})`
-                              }}
+                          <div className="h-2 w-20 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-full transition-all"
+                              style={{ width: `${moduleProgressPercentage}%` }}
                             />
                           </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {isActive && (
-                      <div className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-emerald-500 border border-white" />
-                    )}
-                    
-                    {module.isFeatured && (
-                      <div className="absolute -top-2 -left-2 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-yellow-500 text-xs font-bold text-white">
-                        Featured
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
-          {/* ACTIVE MODULE DETAILS */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-blue-50 to-cyan-100 border border-emerald-200 shadow-[0_28px_80px_rgba(15,23,42,0.15)] p-6 sm:p-8 mb-8">
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_10s_ease-in-out_infinite]" />
-            </div>
-
-            <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${getAccentColorClass(activeModule)} border ${activeModule.accentColor === 'emerald' ? 'border-emerald-300' : activeModule.accentColor === 'blue' ? 'border-blue-300' : 'border-purple-300'} shadow-lg grid place-items-center`}>
-                    {getModuleIcon(activeModule)}
-                  </div>
-                  <div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full ${getAccentBgClass(activeModule)} text-xs font-bold`}>
-                      {appLang === 'hindi' ? activeModule.badgeHi : activeModule.badge}
-                    </span>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">
-                      {appLang === 'hindi' ? activeModule.titleHi : activeModule.titleEn}
-                    </h2>
-                  </div>
-                </div>
-
-                <p className="text-gray-700 mb-6">
-                  {appLang === 'hindi' ? activeModule.descriptionHi : activeModule.descriptionEn}
-                </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
-                      <Target className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{activeModule.totalLessons} Lessons</p>
-                      <p className="text-xs text-gray-600">Step-by-step curriculum</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
-                      <HelpCircle className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{activeModule.totalLessons} Quizzes</p>
-                      <p className="text-xs text-gray-600">Test your knowledge</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
-                      <Clock className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">~{activeModule.totalDuration} min</p>
-                      <p className="text-xs text-gray-600">Total duration</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="h-10 w-10 rounded-xl bg-white/80 backdrop-blur border border-gray-200 grid place-items-center">
-                      <Star className="h-5 w-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">{activeModule.pointsToEarn} Points</p>
-                      <p className="text-xs text-gray-600">Available to earn</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    type="button"
-                    onClick={startModuleLearning}
-                    className={`px-6 py-3 rounded-full bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2 animate-pulseGlow`}
-                  >
-                    {completedInModule > 0 ? 'Continue Learning' : 'Start Learning'} 
-                    <ArrowRight className="h-5 w-5" />
-                  </button>
-                  {isModuleComplete && (
-                    <button
-                      type="button"
-                      onClick={() => setShowModuleQuiz(true)}
-                      className="px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-yellow-500 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2"
-                    >
-                      Take Final Quiz
-                    </button>
-                  )}
-                  {activeModule.id === "grow-your-money-wisely" && isModuleComplete && (
-                    <div className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-300 text-purple-800 text-sm font-bold">
-                      🎉 Last Free Module Completed!
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative h-48 w-48">
-                  <svg viewBox="0 0 120 120" className="h-full w-full progress-ring">
-                    <circle cx="60" cy="60" r="46" stroke="#E5E7EB" strokeWidth="12" fill="none" />
-                    <circle
-                      cx="60"
-                      cy="60"
-                      r="46"
-                      stroke={activeModule.accentColor === 'blue' ? '#3b82f6' : activeModule.accentColor === 'purple' ? '#8b5cf6' : '#10B981'}
-                      strokeWidth="12"
-                      fill="none"
-                      strokeLinecap="round"
-                      className="progress-ring-circle"
-                      strokeDasharray={2 * Math.PI * 46}
-                      strokeDashoffset={2 * Math.PI * 46 * (1 - moduleProgressPercentage / 100)}
-                      style={{ transition: "stroke-dashoffset 600ms ease" }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <p className="text-3xl font-extrabold text-gray-900">
-                      {completedInModule}/{activeModule.totalLessons}
-                    </p>
-                    <p className="text-sm text-gray-600 font-semibold">LESSONS DONE</p>
-                    <p className="text-xs text-emerald-600 mt-2 font-bold">
-                      {moduleProgressPercentage.toFixed(0)}% Complete
-                    </p>
-                  </div>
-                </div>
-                {isModuleComplete && badges.includes(activeModule.badgeUnlocked) && (
-                  <div className="mt-4 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 flex items-center gap-2">
-                    <Award className="h-4 w-4 text-yellow-700" />
-                    <span className="text-sm font-bold text-yellow-800">
-                      {appLang === 'hindi' ? activeModule.badgeUnlockedHi : activeModule.badgeUnlocked} Unlocked!
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Categories + Search */}
-          <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
-            <div className="flex flex-wrap gap-2">
-              {categories.slice(0, 8).map((c) => {
-                const active = activeCat === c;
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setActiveCat(c)}
-                    className={
-                      active
-                        ? "px-4 py-2 rounded-full bg-gradient-to-r from-emerald-600 to-green-500 text-white text-sm font-semibold shadow-sm hover:shadow-md transition-shadow"
-                        : "px-4 py-2 rounded-full bg-white/75 backdrop-blur border border-gray-200 text-sm text-gray-700 hover:border-emerald-300 hover:text-emerald-700 transition-all hover:-translate-y-0.5"
-                    }
-                  >
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex-1" />
-
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/85 backdrop-blur border border-gray-200 shadow-sm w-full lg:w-[360px] hover:shadow-md transition-shadow">
-              <Search className="h-4 w-4 text-gray-400" />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search lessons..."
-                className="bg-transparent outline-none text-sm text-gray-700 flex-1"
-              />
-            </div>
-          </div>
-
-          {/* Main grid */}
-          <div className="mt-6 grid gap-6 lg:grid-cols-[2.1fr,1fr]">
-            {/* LEFT */}
-            <section className="space-y-6">
-              {/* Module Curriculum */}
-              <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-[0_28px_80px_rgba(15,23,42,0.08)] p-6">
-                <div className="pointer-events-none absolute inset-0">
-                  <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/70 to-transparent blur-xl animate-[sheen_8s_ease-in-out_infinite]" />
-                </div>
-
-                <div className="relative flex items-center justify-between mb-6">
-                  <div>
-                    <p className="text-sm font-bold text-emerald-700 uppercase tracking-wide">MODULE CURRICULUM</p>
-                    <h3 className="text-xl font-extrabold text-gray-900 mt-1">
-                      {appLang === 'hindi' ? "पाठ्यक्रम की रूपरेखा" : "Course Outline"} • {activeModule.titleEn}
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">
-                      {completedInModule} of {activeModule.totalLessons} completed
-                    </span>
-                    <div className="h-2 w-20 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-2 bg-gradient-to-r from-emerald-600 to-green-500 rounded-full transition-all"
-                        style={{ width: `${moduleProgressPercentage}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  {moduleLessons.map((lesson, index) => {
-                    const isCompleted = completed.has(lesson.id);
-                    const isCurrent = currentVideoIndex === index;
-                    const quizData = QUIZ_QUESTIONS[lesson.id];
-                    const quizScore = quizScores[lesson.id];
-                    
-                    return (
-                      <div
-                        key={lesson.id}
-                        className={`group rounded-2xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/50' : isCurrent ? 'border-emerald-300 bg-white' : 'border-gray-200 bg-white/70'} p-4 hover:shadow-md transition-all hover:-translate-y-0.5`}
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className="relative">
-                            <div className={`h-12 w-12 rounded-xl border ${isCompleted ? 'border-emerald-300 bg-emerald-100' : 'border-gray-300 bg-gray-100'} grid place-items-center`}>
-                              {isCompleted ? (
-                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-                              ) : (
-                                <span className="text-lg font-bold text-gray-700">{index + 1}</span>
-                              )}
-                            </div>
-                            {index < moduleLessons.length - 1 && (
-                              <div className={`absolute top-12 left-1/2 h-8 w-0.5 ${isCompleted ? 'bg-emerald-300' : 'bg-gray-300'}`} />
-                            )}
-                          </div>
+                      <div className="space-y-3">
+                        {moduleLessons.map((lesson, index) => {
+                          const isCompleted = completed.has(lesson.id);
+                          const isCurrent = currentVideoIndex === index;
+                          const quizData = QUIZ_QUESTIONS[lesson.id];
+                          const quizScore = quizScores[lesson.id];
                           
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h4 className="font-semibold text-gray-900">
-                                  {appLang === 'hindi' && lesson.titleHi ? lesson.titleHi : lesson.title}
-                                </h4>
-                                <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
-                                  <span className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" /> {lesson.duration}
-                                  </span>
-                                  <span>•</span>
-                                  <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
-                                    {lesson.difficulty}
-                                  </span>
-                                  <span>•</span>
-                                  <span>{lesson.views}</span>
-                                  {quizScore && (
-                                    <>
-                                      <span>•</span>
-                                      <span className="flex items-center gap-1">
-                                        <Star className="h-3 w-3 text-amber-500" /> {quizScore.score} pts
-                                      </span>
-                                    </>
+                          return (
+                            <div
+                              key={lesson.id}
+                              className={`group rounded-2xl border ${isCompleted ? 'border-emerald-200 bg-emerald-50/50' : isCurrent ? 'border-emerald-300 bg-white' : 'border-gray-200 bg-white/70'} p-4 hover:shadow-md transition-all hover:-translate-y-0.5`}
+                            >
+                              <div className="flex items-start gap-4">
+                                <div className="relative">
+                                  <div className={`h-12 w-12 rounded-xl border ${isCompleted ? 'border-emerald-300 bg-emerald-100' : 'border-gray-300 bg-gray-100'} grid place-items-center`}>
+                                    {isCompleted ? (
+                                      <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                                    ) : (
+                                      <span className="text-lg font-bold text-gray-700">{index + 1}</span>
+                                    )}
+                                  </div>
+                                  {index < moduleLessons.length - 1 && (
+                                    <div className={`absolute top-12 left-1/2 h-8 w-0.5 ${isCompleted ? 'bg-emerald-300' : 'bg-gray-300'}`} />
                                   )}
                                 </div>
-                                {lesson.whyThisOrder && (
-                                  <p className="text-xs text-gray-600 mt-2 italic">{lesson.whyThisOrder}</p>
-                                )}
+                                
+                                <div className="flex-1">
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <h4 className="font-semibold text-gray-900">
+                                        {appLang === 'hindi' && lesson.titleHi ? lesson.titleHi : lesson.title}
+                                      </h4>
+                                      <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
+                                        <span className="flex items-center gap-1">
+                                          <Clock className="h-3 w-3" /> {lesson.duration}
+                                        </span>
+                                        <span>•</span>
+                                        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                                          {lesson.difficulty}
+                                        </span>
+                                        <span>•</span>
+                                        <span>{lesson.views}</span>
+                                        {quizScore && (
+                                          <>
+                                            <span>•</span>
+                                            <span className="flex items-center gap-1">
+                                              <Star className="h-3 w-3 text-amber-500" /> {quizScore.score} pts
+                                            </span>
+                                          </>
+                                        )}
+                                      </div>
+                                      {lesson.whyThisOrder && (
+                                        <p className="text-xs text-gray-600 mt-2 italic">{lesson.whyThisOrder}</p>
+                                      )}
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-2">
+                                      {isCompleted && (
+                                        <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
+                                          <CheckCircle2 className="h-3 w-3" /> Done
+                                        </span>
+                                      )}
+                                      {quizData && (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setCurrentQuiz(quizData);
+                                            setShowQuiz(true);
+                                          }}
+                                          className="px-3 py-1.5 rounded-full bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-all hover:-translate-y-0.5 flex items-center gap-1"
+                                        >
+                                          <HelpCircle className="h-3 w-3" /> Quiz
+                                        </button>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setCurrentVideoIndex(index);
+                                          setVideoPlayerOpen(true);
+                                        }}
+                                        className="px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all hover:-translate-y-0.5 flex items-center gap-1"
+                                      >
+                                        <Play className="h-3 w-3" /> Watch
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
+                                  {lesson.youtube && lesson.youtube.length > 0 && (
+                                    <div className="mt-3 flex items-center gap-2 text-xs text-red-600">
+                                      <Youtube className="h-3 w-3" />
+                                      <span>{lesson.youtube.length} video{lesson.youtube.length > 1 ? 's' : ''} available</span>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                              
-                              <div className="flex items-center gap-2">
-                                {isCompleted && (
-                                  <span className="text-xs font-semibold text-emerald-700 flex items-center gap-1">
-                                    <CheckCircle2 className="h-3 w-3" /> Done
-                                  </span>
-                                )}
-                                {quizData && (
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* CARDS GRID */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      {lessons.slice(0, 4).map((l, index) => {
+                        const isSaved = saved.includes(l.id);
+                        const isDone = completed.has(l.id);
+                        const hasYoutube = l.youtube && l.youtube.length > 0;
+                        const quizScore = quizScores[l.id];
+
+                        return (
+                          <div
+                            key={l.id}
+                            className="group rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-[0_16px_45px_rgba(15,23,42,0.08)] hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)] transition-all p-4 hover:-translate-y-1 [perspective:900px]"
+                            style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+                          >
+                            <div
+                              className={`relative h-32 rounded-2xl border border-gray-200 overflow-hidden youtube-thumbnail ${hasYoutube ? '' : l.thumbStyle}`}
+                              style={hasYoutube ? {
+                                backgroundImage: `url(https://img.youtube.com/vi/${l.youtube[0].id}/mqdefault.jpg)`
+                              } : {}}
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                              <button
+                                type="button"
+                                onClick={() => setOpenLesson(l)}
+                                className="absolute inset-0 grid place-items-center"
+                                aria-label="Watch"
+                              >
+                                <div className="h-12 w-12 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow grid place-items-center group-hover:scale-105 transition">
+                                  <Play className="h-6 w-6 text-emerald-700" />
+                                </div>
+                              </button>
+
+                              <span className="absolute bottom-2 right-2 text-[11px] font-semibold px-2 py-1 rounded-full bg-black/60 text-white">
+                                {hasYoutube ? l.youtube[0].duration : l.duration}
+                              </span>
+
+                              {hasYoutube && (
+                                <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded-full bg-red-600 text-white flex items-center gap-1">
+                                  <Youtube className="h-3 w-3" />
+                                  YouTube
+                                </span>
+                              )}
+
+                              {isDone && (
+                                <span className="absolute top-2 left-2 text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  Done
+                                </span>
+                              )}
+
+                              {quizScore && (
+                                <span className="absolute top-2 left-2 text-[11px] font-semibold px-2 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 flex items-center gap-1">
+                                  <Star className="h-3 w-3" />
+                                  {quizScore.score} pts
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="mt-4">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
+                                  {l.category}
+                                </span>
+                                <span className="text-[11px] font-semibold text-gray-500">
+                                  {l.difficulty}
+                                </span>
+                              </div>
+
+                              <h3 className="mt-2 text-sm font-extrabold text-gray-900 leading-snug">
+                                {appLang === 'hindi' && l.titleHi ? l.titleHi : l.title}
+                              </h3>
+
+                              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                                <span className="inline-flex items-center gap-1">
+                                  <Eye className="h-3.5 w-3.5" /> {l.views}
+                                </span>
+                                <span className="inline-flex items-center gap-1">
+                                  <Clock className="h-3.5 w-3.5" /> {l.langTag}
+                                </span>
+                              </div>
+
+                              {hasYoutube && (
+                                <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
+                                  <Youtube className="h-3 w-3" />
+                                  <span>{l.youtube.length} video{l.youtube.length > 1 ? 's' : ''} available</span>
+                                </div>
+                              )}
+
+                              <div className="mt-4 flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenLesson(l)}
+                                  className="flex-1 px-3 py-2 rounded-full bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all hover:-translate-y-0.5"
+                                >
+                                  Watch Now
+                                </button>
+                                {QUIZ_QUESTIONS[l.id] && (
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      setCurrentQuiz(quizData);
+                                      setCurrentQuiz(QUIZ_QUESTIONS[l.id]);
                                       setShowQuiz(true);
                                     }}
-                                    className="px-3 py-1.5 rounded-full bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-all hover:-translate-y-0.5 flex items-center gap-1"
+                                    className="flex-1 px-3 py-2 rounded-full bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-1"
                                   >
                                     <HelpCircle className="h-3 w-3" /> Quiz
                                   </button>
                                 )}
+                              </div>
+
+                              <div className="mt-3 flex items-center gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    setCurrentVideoIndex(index);
-                                    setVideoPlayerOpen(true);
-                                  }}
-                                  className="px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all hover:-translate-y-0.5 flex items-center gap-1"
+                                  onClick={() => speakLesson(l)}
+                                  className="h-10 w-10 rounded-full bg-white/75 backdrop-blur border border-gray-200 grid place-items-center hover:shadow-md hover:-translate-y-0.5 transition-all"
+                                  title="Listen"
                                 >
-                                  <Play className="h-3 w-3" /> Watch
+                                  <Volume2 className="h-4 w-4 text-emerald-700" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSave(l.id)}
+                                  className="h-10 w-10 rounded-full bg-white/75 backdrop-blur border border-gray-200 grid place-items-center hover:shadow-md hover:-translate-y-0.5 transition-all"
+                                  title="Save"
+                                >
+                                  <Bookmark
+                                    className={`h-4 w-4 ${isSaved ? "text-emerald-700" : "text-gray-500"}`}
+                                  />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => markCompleted(l.id)}
+                                  className="flex-1 px-3 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition-all hover:-translate-y-0.5"
+                                >
+                                  Mark completed
                                 </button>
                               </div>
                             </div>
-                            
-                            {lesson.youtube && lesson.youtube.length > 0 && (
-                              <div className="mt-3 flex items-center gap-2 text-xs text-red-600">
-                                <Youtube className="h-3 w-3" />
-                                <span>{lesson.youtube.length} video{lesson.youtube.length > 1 ? 's' : ''} available</span>
-                              </div>
-                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* RIGHT SIDEBAR */}
+                  <aside className="space-y-5">
+                    {/* Overall progress ring */}
+                    <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-lg p-5">
+                      <div className="pointer-events-none absolute inset-0">
+                        <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_10s_ease-in-out_infinite]" />
+                      </div>
+
+                      <div className="relative flex items-center justify-between">
+                        <p className="text-sm font-semibold text-gray-900">Overall Progress</p>
+                        <p className="text-sm font-bold text-emerald-700">{totalProgressPercentage.toFixed(0)}%</p>
+                      </div>
+
+                      <div className="relative mt-4 flex items-center justify-center">
+                        <div className="relative h-36 w-36">
+                          <svg viewBox="0 0 120 120" className="h-full w-full">
+                            <circle cx="60" cy="60" r="46" stroke="#E5E7EB" strokeWidth="10" fill="none" />
+                            <circle
+                              cx="60"
+                              cy="60"
+                              r="46"
+                              stroke="#22C55E"
+                              strokeWidth="10"
+                              fill="none"
+                              strokeLinecap="round"
+                              strokeDasharray={2 * Math.PI * 46}
+                              strokeDashoffset={2 * Math.PI * 46 * (1 - totalProgressPercentage / 100)}
+                              style={{ transition: "stroke-dashoffset 600ms ease" }}
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <p className="text-2xl font-extrabold text-gray-900">
+                              {totalCompleted}/{totalLessons}
+                            </p>
+                            <p className="text-xs text-gray-500 font-semibold">LESSONS DONE</p>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
 
-              {/* CARDS GRID */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {lessons.slice(0, 4).map((l, index) => {
-                  const isSaved = saved.includes(l.id);
-                  const isDone = completed.has(l.id);
-                  const hasYoutube = l.youtube && l.youtube.length > 0;
-                  const quizScore = quizScores[l.id];
+                      <div className="relative mt-4 rounded-2xl bg-emerald-50/80 backdrop-blur border border-emerald-200 p-4">
+                        <p className="text-xs font-semibold text-emerald-900">
+                          Complete {Math.max(0, 5 - totalCompleted)} more lessons to unlock:
+                        </p>
+                        <p className="text-sm font-bold text-emerald-800 mt-1">
+                          {totalCompleted < 5 ? "Consistent Learner badge" : "🎉 Next badge unlocked!"}
+                        </p>
+                      </div>
+                    </div>
 
-                  return (
-                    <div
-                      key={l.id}
-                      className="group rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-[0_16px_45px_rgba(15,23,42,0.08)] hover:shadow-[0_24px_70px_rgba(15,23,42,0.12)] transition-all p-4 hover:-translate-y-1 [perspective:900px]"
-                      style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
-                    >
-                      <div
-                        className={`relative h-32 rounded-2xl border border-gray-200 overflow-hidden youtube-thumbnail ${hasYoutube ? '' : l.thumbStyle}`}
-                        style={hasYoutube ? {
-                          backgroundImage: `url(https://img.youtube.com/vi/${l.youtube[0].id}/mqdefault.jpg)`
-                        } : {}}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                    {/* Points Summary */}
+                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50/80 to-yellow-50/50 backdrop-blur border border-amber-200 p-5">
+                      <div className="pointer-events-none absolute inset-0">
+                        <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-amber-100/30 to-transparent blur-xl animate-[sheen_12s_ease-in-out_infinite]" />
+                      </div>
+
+                      <div className="relative flex items-center justify-between mb-3">
+                        <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                          <Star className="h-4 w-4" /> Points Earned
+                        </p>
+                        <span className="text-xl font-bold text-amber-700">{points}</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Lesson quizzes</span>
+                          <span className="font-semibold text-emerald-700">+10 each</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Module completion</span>
+                          <span className="font-semibold text-emerald-700">+50</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-600">Perfect quiz score</span>
+                          <span className="font-semibold text-emerald-700">+30 bonus</span>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 text-center">
+                        <p className="text-xs text-gray-600">
+                          Earn points to unlock badges and track your learning journey!
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Badges Earned */}
+                    {badges.length > 0 && (
+                      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-yellow-50/80 to-amber-50/50 backdrop-blur border border-yellow-200 p-5">
+                        <div className="pointer-events-none absolute inset-0">
+                          <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-yellow-100/30 to-transparent blur-xl animate-[sheen_12s_ease-in-out_infinite]" />
+                        </div>
+
+                        <div className="relative flex items-center justify-between mb-3">
+                          <p className="text-sm font-semibold text-yellow-800 flex items-center gap-2">
+                            <Award className="h-4 w-4" /> Badges Earned
+                          </p>
+                          <span className="text-xs text-yellow-700 font-bold">{badges.length}</span>
+                        </div>
+
+                        <div className="space-y-3">
+                          {badges.map((badge, index) => (
+                            <div
+                              key={badge}
+                              className="flex items-center gap-3 p-3 rounded-2xl bg-white/70 backdrop-blur border border-yellow-200"
+                              style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.1}s both` }}
+                            >
+                              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 border border-yellow-300 grid place-items-center shadow">
+                                <Award className="h-5 w-5 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900">{badge}</p>
+                                <p className="text-xs text-gray-600">Module completed</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Saved for later */}
+                    <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-lg p-5">
+                      <div className="pointer-events-none absolute inset-0">
+                        <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_12s_ease-in-out_infinite]" />
+                      </div>
+
+                      <div className="relative flex items-center justify-between mb-3">
+                        <p className="text-sm font-semibold text-gray-900">Saved for later</p>
                         <button
                           type="button"
-                          onClick={() => setOpenLesson(l)}
-                          className="absolute inset-0 grid place-items-center"
-                          aria-label="Watch"
+                          className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                          onClick={() => setActiveCat("All Topics")}
                         >
-                          <div className="h-12 w-12 rounded-full bg-white/80 backdrop-blur border border-gray-200 shadow grid place-items-center group-hover:scale-105 transition">
-                            <Play className="h-6 w-6 text-emerald-700" />
-                          </div>
+                          View All
                         </button>
-
-                        <span className="absolute bottom-2 right-2 text-[11px] font-semibold px-2 py-1 rounded-full bg-black/60 text-white">
-                          {hasYoutube ? l.youtube[0].duration : l.duration}
-                        </span>
-
-                        {hasYoutube && (
-                          <span className="absolute top-2 right-2 text-[10px] font-bold px-2 py-1 rounded-full bg-red-600 text-white flex items-center gap-1">
-                            <Youtube className="h-3 w-3" />
-                            YouTube
-                          </span>
-                        )}
-
-                        {isDone && (
-                          <span className="absolute top-2 left-2 text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Done
-                          </span>
-                        )}
-
-                        {quizScore && (
-                          <span className="absolute top-2 left-2 text-[11px] font-semibold px-2 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 flex items-center gap-1">
-                            <Star className="h-3 w-3" />
-                            {quizScore.score} pts
-                          </span>
-                        )}
                       </div>
 
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">
-                            {l.category}
-                          </span>
-                          <span className="text-[11px] font-semibold text-gray-500">
-                            {l.difficulty}
-                          </span>
-                        </div>
-
-                        <h3 className="mt-2 text-sm font-extrabold text-gray-900 leading-snug">
-                          {appLang === 'hindi' && l.titleHi ? l.titleHi : l.title}
-                        </h3>
-
-                        <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                          <span className="inline-flex items-center gap-1">
-                            <Eye className="h-3.5 w-3.5" /> {l.views}
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" /> {l.langTag}
-                          </span>
-                        </div>
-
-                        {hasYoutube && (
-                          <div className="mt-2 flex items-center gap-1 text-xs text-red-600">
-                            <Youtube className="h-3 w-3" />
-                            <span>{l.youtube.length} video{l.youtube.length > 1 ? 's' : ''} available</span>
-                          </div>
-                        )}
-
-                        <div className="mt-4 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setOpenLesson(l)}
-                            className="flex-1 px-3 py-2 rounded-full bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 transition-all hover:-translate-y-0.5"
-                          >
-                            Watch Now
-                          </button>
-                          {QUIZ_QUESTIONS[l.id] && (
+                      {savedLessons.length === 0 ? (
+                        <p className="text-sm text-gray-600">
+                          Save lessons to watch later.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {savedLessons.slice(0, 3).map((l, index) => (
                             <button
+                              key={l.id}
                               type="button"
-                              onClick={() => {
-                                setCurrentQuiz(QUIZ_QUESTIONS[l.id]);
-                                setShowQuiz(true);
-                              }}
-                              className="flex-1 px-3 py-2 rounded-full bg-amber-600 text-white text-xs font-semibold hover:bg-amber-700 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-1"
+                              onClick={() => setOpenLesson(l)}
+                              className="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-gray-50/80 border border-gray-100 hover:bg-gray-50 transition-all hover:-translate-y-0.5"
+                              style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.1}s both` }}
                             >
-                              <HelpCircle className="h-3 w-3" /> Quiz
+                              <div 
+                                className={`h-12 w-14 rounded-xl border border-gray-200 ${l.youtube ? 'youtube-thumbnail' : l.thumbStyle}`}
+                                style={l.youtube ? {
+                                  backgroundImage: `url(https://img.youtube.com/vi/${l.youtube[0].id}/default.jpg)`,
+                                  backgroundSize: 'cover',
+                                  backgroundPosition: 'center'
+                                } : {}}
+                              />
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-gray-900 truncate">
+                                  {appLang === 'hindi' && l.titleHi ? l.titleHi : l.title}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {l.duration} • {l.difficulty}
+                                </p>
+                                {l.youtube && (
+                                  <p className="text-[10px] text-red-600 flex items-center gap-1">
+                                    <Youtube className="h-3 w-3" />
+                                    YouTube available
+                                  </p>
+                                )}
+                              </div>
                             </button>
-                          )}
+                          ))}
                         </div>
-
-                        <div className="mt-3 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => speakLesson(l)}
-                            className="h-10 w-10 rounded-full bg-white/75 backdrop-blur border border-gray-200 grid place-items-center hover:shadow-md hover:-translate-y-0.5 transition-all"
-                            title="Listen"
-                          >
-                            <Volume2 className="h-4 w-4 text-emerald-700" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => toggleSave(l.id)}
-                            className="h-10 w-10 rounded-full bg-white/75 backdrop-blur border border-gray-200 grid place-items-center hover:shadow-md hover:-translate-y-0.5 transition-all"
-                            title="Save"
-                          >
-                            <Bookmark
-                              className={`h-4 w-4 ${isSaved ? "text-emerald-700" : "text-gray-500"}`}
-                            />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => markCompleted(l.id)}
-                            className="flex-1 px-3 py-2 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition-all hover:-translate-y-0.5"
-                          >
-                            Mark completed
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* RIGHT SIDEBAR */}
-            <aside className="space-y-5">
-              {/* Overall progress ring */}
-              <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-lg p-5">
-                <div className="pointer-events-none absolute inset-0">
-                  <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_10s_ease-in-out_infinite]" />
-                </div>
-
-                <div className="relative flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">Overall Progress</p>
-                  <p className="text-sm font-bold text-emerald-700">{totalProgressPercentage.toFixed(0)}%</p>
-                </div>
-
-                <div className="relative mt-4 flex items-center justify-center">
-                  <div className="relative h-36 w-36">
-                    <svg viewBox="0 0 120 120" className="h-full w-full">
-                      <circle cx="60" cy="60" r="46" stroke="#E5E7EB" strokeWidth="10" fill="none" />
-                      <circle
-                        cx="60"
-                        cy="60"
-                        r="46"
-                        stroke="#22C55E"
-                        strokeWidth="10"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 46}
-                        strokeDashoffset={2 * Math.PI * 46 * (1 - totalProgressPercentage / 100)}
-                        style={{ transition: "stroke-dashoffset 600ms ease" }}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-2xl font-extrabold text-gray-900">
-                        {totalCompleted}/{totalLessons}
-                      </p>
-                      <p className="text-xs text-gray-500 font-semibold">LESSONS DONE</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative mt-4 rounded-2xl bg-emerald-50/80 backdrop-blur border border-emerald-200 p-4">
-                  <p className="text-xs font-semibold text-emerald-900">
-                    Complete {Math.max(0, 5 - totalCompleted)} more lessons to unlock:
-                  </p>
-                  <p className="text-sm font-bold text-emerald-800 mt-1">
-                    {totalCompleted < 5 ? "Consistent Learner badge" : "🎉 Next badge unlocked!"}
-                  </p>
+                  </aside>
                 </div>
               </div>
-
-              {/* Points Summary */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-50/80 to-yellow-50/50 backdrop-blur border border-amber-200 p-5">
-                <div className="pointer-events-none absolute inset-0">
-                  <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-amber-100/30 to-transparent blur-xl animate-[sheen_12s_ease-in-out_infinite]" />
-                </div>
-
-                <div className="relative flex items-center justify-between mb-3">
-                  <p className="text-sm font-semibold text-amber-800 flex items-center gap-2">
-                    <Star className="h-4 w-4" /> Points Earned
-                  </p>
-                  <span className="text-xl font-bold text-amber-700">{points}</span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">Lesson quizzes</span>
-                    <span className="font-semibold text-emerald-700">+10 each</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">Module completion</span>
-                    <span className="font-semibold text-emerald-700">+50</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-gray-600">Perfect quiz score</span>
-                    <span className="font-semibold text-emerald-700">+30 bonus</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 text-center">
-                  <p className="text-xs text-gray-600">
-                    Earn points to unlock badges and track your learning journey!
-                  </p>
-                </div>
-              </div>
-
-              {/* Badges Earned */}
-              {badges.length > 0 && (
-                <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-yellow-50/80 to-amber-50/50 backdrop-blur border border-yellow-200 p-5">
-                  <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-yellow-100/30 to-transparent blur-xl animate-[sheen_12s_ease-in-out_infinite]" />
-                  </div>
-
-                  <div className="relative flex items-center justify-between mb-3">
-                    <p className="text-sm font-semibold text-yellow-800 flex items-center gap-2">
-                      <Award className="h-4 w-4" /> Badges Earned
-                    </p>
-                    <span className="text-xs text-yellow-700 font-bold">{badges.length}</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    {badges.map((badge, index) => (
-                      <div
-                        key={badge}
-                        className="flex items-center gap-3 p-3 rounded-2xl bg-white/70 backdrop-blur border border-yellow-200"
-                        style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.1}s both` }}
-                      >
-                        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 border border-yellow-300 grid place-items-center shadow">
-                          <Award className="h-5 w-5 text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-gray-900">{badge}</p>
-                          <p className="text-xs text-gray-600">Module completed</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Saved for later */}
-              <div className="relative overflow-hidden rounded-3xl bg-white/85 backdrop-blur border border-gray-200 shadow-lg p-5">
-                <div className="pointer-events-none absolute inset-0">
-                  <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_12s_ease-in-out_infinite]" />
-                </div>
-
-                <div className="relative flex items-center justify-between mb-3">
-                  <p className="text-sm font-semibold text-gray-900">Saved for later</p>
-                  <button
-                    type="button"
-                    className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
-                    onClick={() => setActiveCat("All Topics")}
-                  >
-                    View All
-                  </button>
-                </div>
-
-                {savedLessons.length === 0 ? (
-                  <p className="text-sm text-gray-600">
-                    Save lessons to watch later.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {savedLessons.slice(0, 3).map((l, index) => (
-                      <button
-                        key={l.id}
-                        type="button"
-                        onClick={() => setOpenLesson(l)}
-                        className="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-gray-50/80 border border-gray-100 hover:bg-gray-50 transition-all hover:-translate-y-0.5"
-                        style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.1}s both` }}
-                      >
-                        <div 
-                          className={`h-12 w-14 rounded-xl border border-gray-200 ${l.youtube ? 'youtube-thumbnail' : l.thumbStyle}`}
-                          style={l.youtube ? {
-                            backgroundImage: `url(https://img.youtube.com/vi/${l.youtube[0].id}/default.jpg)`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center'
-                          } : {}}
-                        />
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {appLang === 'hindi' && l.titleHi ? l.titleHi : l.title}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {l.duration} • {l.difficulty}
-                          </p>
-                          {l.youtube && (
-                            <p className="text-[10px] text-red-600 flex items-center gap-1">
-                              <Youtube className="h-3 w-3" />
-                              YouTube available
-                            </p>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </aside>
-          </div>
-        </main>
+            </div>
+          </main>
+        </div>
 
         {/* VIDEO PLAYER MODAL */}
         {videoPlayerOpen && (

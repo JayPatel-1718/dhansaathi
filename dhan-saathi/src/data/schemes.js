@@ -8,7 +8,7 @@ export const schemes = [
     type: "govt",
     tag: "FARMER",
     verified: true,
-    image: "/scheme-images/money.jpeg",
+    image: "money.png",
 
     title: "PM Kisan Samman Nidhi",
     desc:
