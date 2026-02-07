@@ -37,6 +37,9 @@ import {
   HelpCircle,
   Mic,
   VolumeX,
+  PiggyBank,
+  TrendingUp as TrendingUpIcon,
+  BanknoteIcon,
 } from "lucide-react";
 
 // Firebase storage keys
@@ -50,6 +53,7 @@ const FB_KEYS = {
   BADGES: "badges",
   QUIZ_SCORES: "quizScores",
   POINTS: "points",
+  CURRENT_MODULE: "currentModule",
 };
 
 const LS = {
@@ -61,6 +65,7 @@ const LS = {
   badges: "dhan-saathi-badges",
   quizScores: "dhan-saathi-quiz-scores",
   points: "dhan-saathi-points",
+  currentModule: "dhan-saathi-current-module",
 };
 
 function readJSON(key, fallback) {
@@ -71,28 +76,76 @@ function readJSON(key, fallback) {
   }
 }
 
-// Module Data
-const ESSENTIAL_MODULE = {
-  id: "essential-finance-basics",
-  titleEn: "Stay Safe, Grow Smart – 6 Essential Lessons",
-  titleHi: "सुरक्षित रहें, समझदारी से बढ़ें – 6 जरूरी सबक",
-  descriptionEn: "Protect your hard-earned money from scammers and build strong financial habits with these 6 short, beginner-to-intermediate videos. Learn to spot fake calls & UPI tricks, understand why your savings account matters, follow the golden 50/30/20 budgeting rule, start mutual funds with just ₹500, invest wisely in gold, and much more — all explained simply in Hindi (with some bilingual content).",
-  descriptionHi: "अपनी मेहनत की कमाई को ठगों से बचाएं और मजबूत वित्तीय आदतें बनाएं — ये 6 छोटे-छोटे वीडियो देखें। फर्जी बैंक कॉल और UPI धोखाधड़ी पहचानें, बचत खाते का महत्व समझें, 50/30/20 बजट नियम सीखें, सिर्फ ₹500 से म्यूचुअल फंड शुरू करें, सोने में समझदारी से निवेश करें — सब कुछ आसान हिंदी में (कुछ वीडियो में अंग्रेजी भी)।",
-  badge: "Safety + Smart Money",
-  badgeHi: "सुरक्षा + स्मार्ट बचत",
-  icon: "ShieldRupee",
-  totalDuration: 60, // minutes
-  totalLessons: 6,
-  thumbStyle: "bg-gradient-to-br from-emerald-100 via-blue-50 to-cyan-100",
-  accentColor: "emerald",
-  badgeUnlocked: "Safety Champion",
-  badgeUnlockedHi: "सुरक्षा योद्धा",
-  order: 1,
-  isFeatured: true,
-};
+// Module Data - Updated with all 3 modules
+const MODULES = [
+  {
+    id: "essential-finance-basics",
+    titleEn: "Stay Safe, Grow Smart – 6 Essential Lessons",
+    titleHi: "सुरक्षित रहें, समझदारी से बढ़ें – 6 जरूरी सबक",
+    descriptionEn: "Protect your hard-earned money from scammers and build strong financial habits with these 6 short, beginner-to-intermediate videos. Learn to spot fake calls & UPI tricks, understand why your savings account matters, follow the golden 50/30/20 budgeting rule, start mutual funds with just ₹500, invest wisely in gold, and much more — all explained simply in Hindi (with some bilingual content).",
+    descriptionHi: "अपनी मेहनत की कमाई को ठगों से बचाएं और मजबूत वित्तीय आदतें बनाएं — ये 6 छोटे-छोटे वीडियो देखें। फर्जी बैंक कॉल और UPI धोखाधड़ी पहचानें, बचत खाते का महत्व समझें, 50/30/20 बजट नियम सीखें, सिर्फ ₹500 से म्यूचुअल फंड शुरू करें, सोने में समझदारी से निवेश करें — सब कुछ आसान हिंदी में (कुछ वीडियो में अंग्रेजी भी)।",
+    badge: "Safety + Smart Money",
+    badgeHi: "सुरक्षा + स्मार्ट बचत",
+    icon: "ShieldRupee",
+    totalDuration: 60,
+    totalLessons: 6,
+    thumbStyle: "bg-gradient-to-br from-emerald-100 via-blue-50 to-cyan-100",
+    accentColor: "emerald",
+    badgeUnlocked: "Safety Champion",
+    badgeUnlockedHi: "सुरक्षा योद्धा",
+    order: 1,
+    isFeatured: true,
+    isFree: true,
+    pointsToEarn: 60,
+  },
+  {
+    id: "save-first-worry-less",
+    titleEn: "Save First, Worry Less – Build Your Safety Net",
+    titleHi: "पहले बचाएं, कम चिंता करें – अपना सुरक्षा जाल बनाएं",
+    descriptionEn: "Build strong saving habits and understand why savings accounts matter. Learn about emergency funds, simple banking tools (post office/bank accounts, RD/FD basics) in an encouraging, zero-pressure tone. Perfect for beginners who want to start saving confidently.",
+    descriptionHi: "मजबूत बचत की आदतें बनाएं और समझें कि बचत खाते क्यों महत्वपूर्ण हैं। आपातकालीन फंड, सरल बैंकिंग टूल (पोस्ट ऑफिस/बैंक खाते, आरडी/एफडी बेसिक्स) के बारे में जानें। शुरुआती लोगों के लिए आदर्श जो आत्मविश्वास से बचत शुरू करना चाहते हैं।",
+    badge: "Saving Habits",
+    badgeHi: "बचत की आदतें",
+    icon: "PiggyBank",
+    totalDuration: 55,
+    totalLessons: 6,
+    thumbStyle: "bg-gradient-to-br from-blue-100 via-indigo-50 to-purple-100",
+    accentColor: "blue",
+    badgeUnlocked: "Savings Pro",
+    badgeUnlockedHi: "बचत विशेषज्ञ",
+    order: 2,
+    isFeatured: false,
+    isFree: true,
+    pointsToEarn: 75,
+  },
+  {
+    id: "grow-your-money-wisely",
+    titleEn: "Grow Your Money Wisely – Start Small Investing",
+    titleHi: "अपने पैसे को समझदारी से बढ़ाएं – छोटे निवेश से शुरुआत करें",
+    descriptionEn: "Introduce low-risk, small-ticket investing (SIP in mutual funds, gold, tax-saving options). Perfect for users who completed saving module and are ready for growth. Exciting but safe tone — 'Investing is not gambling when you start small and smart'.",
+    descriptionHi: "कम जोखिम, छोटे निवेश (म्यूचुअल फंड में SIP, सोना, टैक्स-बचत विकल्प) से परिचित हों। उन उपयोगकर्ताओं के लिए आदर्श जिन्होंने बचत मॉड्यूल पूरा कर लिया है और विकास के लिए तैयार हैं। रोमांचक लेकिन सुरक्षित टोन — 'निवेश जुए नहीं है जब आप छोटे और समझदारी से शुरू करते हैं'।",
+    badge: "Smart Investing",
+    badgeHi: "स्मार्ट निवेश",
+    icon: "TrendingUp",
+    totalDuration: 80,
+    totalLessons: 6,
+    thumbStyle: "bg-gradient-to-br from-purple-100 via-pink-50 to-rose-100",
+    accentColor: "purple",
+    badgeUnlocked: "Investor Beginner",
+    badgeUnlockedHi: "निवेशक शुरुआती",
+    order: 3,
+    isFeatured: false,
+    isFree: true,
+    pointsToEarn: 95,
+  },
+];
 
-// Quiz Questions Data
+// Get the featured module
+const FEATURED_MODULE = MODULES.find(m => m.isFeatured) || MODULES[0];
+
+// Quiz Questions Data - Updated with new module questions
 const QUIZ_QUESTIONS = {
+  // Module 1 questions (existing)
   "otp-safety": {
     question: "What is the most important rule when someone calls claiming to be from your bank?",
     questionHi: "जब कोई आपके बैंक से होने का दावा करके कॉल करे, तो सबसे महत्वपूर्ण नियम क्या है?",
@@ -105,7 +158,8 @@ const QUIZ_QUESTIONS = {
     correct: "B",
     explanation: "Banks never ask for OTP, PIN, or password over calls. These are always scams.",
     explanationHi: "बैंक कभी भी कॉल पर OTP, PIN या पासवर्ड नहीं मांगते। ये हमेशा धोखाधड़ी होती हैं।",
-    points: 10
+    points: 10,
+    moduleId: "essential-finance-basics"
   },
   "upi-fake-collect": {
     question: "Which of these is a common sign of a fake UPI payment request?",
@@ -119,7 +173,8 @@ const QUIZ_QUESTIONS = {
     correct: "B",
     explanation: "Real UPI payments don't need your approval to receive money. Fake requests trick you into approving payments.",
     explanationHi: "असली UPI भुगतानों को पैसा प्राप्त करने के लिए आपकी स्वीकृति की आवश्यकता नहीं होती। फर्जी अनुरोध आपको भुगतान स्वीकार करने के लिए धोखा देते हैं।",
-    points: 10
+    points: 10,
+    moduleId: "essential-finance-basics"
   },
   "50-30-20": {
     question: "According to the 50/30/20 budgeting rule, what percentage of your after-tax income should go toward needs (rent, food, bills, etc.)?",
@@ -133,7 +188,8 @@ const QUIZ_QUESTIONS = {
     correct: "C",
     explanation: "50% for needs, 30% for wants, and 20% for savings/investments.",
     explanationHi: "50% जरूरतों के लिए, 30% इच्छाओं के लिए, और 20% बचत/निवेश के लिए।",
-    points: 10
+    points: 10,
+    moduleId: "essential-finance-basics"
   },
   "savings-account": {
     question: "What is one of the most important benefits of maintaining a regular savings account?",
@@ -142,12 +198,13 @@ const QUIZ_QUESTIONS = {
       { id: "A", text: "It guarantees very high returns like stock market", textHi: "यह शेयर बाजार की तरह बहुत अधिक रिटर्न की गारंटी देता है" },
       { id: "B", text: "It provides emergency funds and builds financial discipline", textHi: "यह आपातकालीन फंड प्रदान करता है और वित्तीय अनुशासन बनाता है" },
       { id: "C", text: "It allows unlimited free international transactions", textHi: "यह असीमित मुफ्त अंतर्राष्ट्रीय लेनदेन की अनुमति देता है" },
-      { id: "D", text: "It automatically invests your money in mutual funds", textHi: "यह आपके पैसे को स्वचालित रूप से म्यूचुअल फंड में निवेश करता है" }
+      { id: "D", text: "It automatically invests your money in mutual funds", textHi: "यह आपके पैसे को स्वचालित रूप से म्यूचुअल फंड में निवेश कर देता है" }
     ],
     correct: "B",
     explanation: "Savings accounts are safe, accessible, and help build emergency funds and financial discipline.",
     explanationHi: "बचत खाते सुरक्षित, सुलभ होते हैं और आपातकालीन फंड तथा वित्तीय अनुशासन बनाने में मदद करते हैं।",
-    points: 10
+    points: 10,
+    moduleId: "essential-finance-basics"
   },
   "mutual-funds-basics": {
     question: "What is a key advantage of starting mutual funds with a small amount like ₹500 through SIP?",
@@ -161,7 +218,8 @@ const QUIZ_QUESTIONS = {
     correct: "B",
     explanation: "SIP with small amounts allows rupee cost averaging, reducing risk and building wealth gradually.",
     explanationHi: "छोटी राशि के साथ SIP रुपये की लागत को औसत करने की अनुमति देता है, जिससे जोखिम कम होता है और धन धीरे-धीरे बनता है।",
-    points: 10
+    points: 10,
+    moduleId: "essential-finance-basics"
   },
   "gold-investing": {
     question: "Which option is generally considered a safer and more convenient way for beginners to invest in gold in India?",
@@ -175,12 +233,198 @@ const QUIZ_QUESTIONS = {
     correct: "B",
     explanation: "Gold ETFs and SGBs are digital, safe from theft, and often provide interest/bonus benefits.",
     explanationHi: "गोल्ड ETFs और SGBs डिजिटल होते हैं, चोरी से सुरक्षित होते हैं, और अक्सर ब्याज/बोनस लाभ प्रदान करते हैं।",
-    points: 10
+    points: 10,
+    moduleId: "essential-finance-basics"
+  },
+  
+  // Module 2 questions
+  "savings-account-benefits": {
+    question: "What is the main benefit of a zero-balance savings account like PMJDY?",
+    questionHi: "PMJDY जैसे जीरो-बैलेंस बचत खाते का मुख्य लाभ क्या है?",
+    options: [
+      { id: "A", text: "High interest rates", textHi: "उच्च ब्याज दरें" },
+      { id: "B", text: "No minimum balance penalty", textHi: "न्यूनतम शेष राशि जुर्माना नहीं" },
+      { id: "C", text: "Free stocks", textHi: "मुफ्त स्टॉक" },
+      { id: "D", text: "Unlimited loans", textHi: "असीमित ऋण" }
+    ],
+    correct: "B",
+    explanation: "Zero-balance accounts like PMJDY allow you to maintain any balance without penalties, making banking accessible to everyone.",
+    explanationHi: "PMJDY जैसे जीरो-बैलेंस खाते आपको बिना किसी जुर्माने के कोई भी बैलेंस रखने की अनुमति देते हैं, जिससे बैंकिंग सभी के लिए सुलभ हो जाती है।",
+    points: 10,
+    moduleId: "save-first-worry-less"
+  },
+  "daily-savings-growth": {
+    question: "If you save ₹50 daily at 7% interest, how does it grow?",
+    questionHi: "यदि आप 7% ब्याज पर ₹50 रोजाना बचाते हैं, तो यह कैसे बढ़ता है?",
+    options: [
+      { id: "A", text: "Stays the same", textHi: "वैसा ही रहता है" },
+      { id: "B", text: "Doubles every 10 years", textHi: "हर 10 साल में दोगुना हो जाता है" },
+      { id: "C", text: "Loses value", textHi: "मूल्य खो देता है" },
+      { id: "D", text: "Grows only if you add more", textHi: "तभी बढ़ता है जब आप और जोड़ते हैं" }
+    ],
+    correct: "B",
+    explanation: "Through compound interest, small daily savings can grow significantly over time, typically doubling every 10-12 years at 7%.",
+    explanationHi: "चक्रवृद्धि ब्याज के माध्यम से, छोटी दैनिक बचत समय के साथ काफी बढ़ सकती है, आमतौर पर 7% पर हर 10-12 साल में दोगुनी हो जाती है।",
+    points: 10,
+    moduleId: "save-first-worry-less"
+  },
+  "emergency-fund-coverage": {
+    question: "How much should your emergency fund cover?",
+    questionHi: "आपके आपातकालीन फंड को कितना कवर करना चाहिए?",
+    options: [
+      { id: "A", text: "1 month expenses", textHi: "1 महीने का खर्च" },
+      { id: "B", text: "3–6 months expenses", textHi: "3–6 महीने का खर्च" },
+      { id: "C", text: "1 year salary", textHi: "1 वर्ष का वेतन" },
+      { id: "D", text: "All your savings", textHi: "आपकी सारी बचत" }
+    ],
+    correct: "B",
+    explanation: "An emergency fund should cover 3-6 months of living expenses to handle unexpected situations without debt.",
+    explanationHi: "आपातकालीन फंड में 3-6 महीने का जीवनयापन खर्च होना चाहिए ताकि बिना कर्ज के अप्रत्याशित स्थितियों से निपटा जा सके।",
+    points: 10,
+    moduleId: "save-first-worry-less"
+  },
+  "rd-difference": {
+    question: "What makes RD different from regular savings?",
+    questionHi: "RD को नियमित बचत से क्या अलग बनाता है?",
+    options: [
+      { id: "A", text: "One-time deposit", textHi: "एकमुश्त जमा" },
+      { id: "B", text: "Monthly fixed deposit", textHi: "मासिक स्थिर जमा" },
+      { id: "C", text: "No interest", textHi: "कोई ब्याज नहीं" },
+      { id: "D", text: "Unlimited withdrawals", textHi: "असीमित निकासी" }
+    ],
+    correct: "B",
+    explanation: "RD (Recurring Deposit) requires a fixed monthly deposit for a fixed tenure, offering higher interest than regular savings.",
+    explanationHi: "RD (आवर्ती जमा) के लिए एक निश्चित अवधि के लिए निश्चित मासिक जमा की आवश्यकता होती है, जो नियमित बचत की तुलना में अधिक ब्याज प्रदान करती है।",
+    points: 10,
+    moduleId: "save-first-worry-less"
+  },
+  "fd-advantage": {
+    question: "What is the main advantage of FD?",
+    questionHi: "FD का मुख्य लाभ क्या है?",
+    options: [
+      { id: "A", text: "High risk", textHi: "उच्च जोखिम" },
+      { id: "B", text: "Guaranteed fixed returns", textHi: "गारंटीकृत निश्चित रिटर्न" },
+      { id: "C", text: "Daily withdrawals", textHi: "दैनिक निकासी" },
+      { id: "D", text: "Market-linked", textHi: "बाजार-लिंक्ड" }
+    ],
+    correct: "B",
+    explanation: "Fixed Deposits offer guaranteed fixed returns at a predetermined interest rate, making them low-risk investments.",
+    explanationHi: "फिक्स्ड डिपॉजिट पूर्व निर्धारित ब्याज दर पर गारंटीकृत निश्चित रिटर्न प्रदान करते हैं, जिससे वे कम जोखिम वाले निवेश बन जाते हैं।",
+    points: 10,
+    moduleId: "save-first-worry-less"
+  },
+  "post-office-rural": {
+    question: "For rural users, post office savings are often better because?",
+    questionHi: "ग्रामीण उपयोगकर्ताओं के लिए, पोस्ट ऑफिस बचत अक्सर बेहतर होती है क्योंकि?",
+    options: [
+      { id: "A", text: "Higher tech", textHi: "उच्च तकनीक" },
+      { id: "B", text: "More branches in villages", textHi: "गांवों में अधिक शाखाएं" },
+      { id: "C", text: "Lower interest", textHi: "कम ब्याज" },
+      { id: "D", text: "Complex apps", textHi: "जटिल ऐप्स" }
+    ],
+    correct: "B",
+    explanation: "Post offices have wider reach in rural areas, making them more accessible than banks for many villagers.",
+    explanationHi: "पोस्ट ऑफिस का ग्रामीण क्षेत्रों में व्यापक पहुंच है, जिससे वे कई ग्रामीणों के लिए बैंकों की तुलना में अधिक सुलभ होते हैं।",
+    points: 10,
+    moduleId: "save-first-worry-less"
+  },
+  
+  // Module 3 questions
+  "investing-early": {
+    question: "Why start investing early?",
+    questionHi: "निवेश जल्दी क्यों शुरू करें?",
+    options: [
+      { id: "A", text: "More risk", textHi: "अधिक जोखिम" },
+      { id: "B", text: "Power of compounding", textHi: "चक्रवृद्धि की शक्ति" },
+      { id: "C", text: "Higher taxes", textHi: "उच्च कर" },
+      { id: "D", text: "Less money needed", textHi: "कम पैसे की जरूरत" }
+    ],
+    correct: "B",
+    explanation: "Starting early gives your money more time to compound, significantly increasing your wealth over the long term.",
+    explanationHi: "जल्दी शुरू करने से आपके पैसे को चक्रवृद्धि के लिए अधिक समय मिलता है, जिससे लंबी अवधि में आपकी संपत्ति में काफी वृद्धि होती है।",
+    points: 10,
+    moduleId: "grow-your-money-wisely"
+  },
+  "mutual-funds-explained": {
+    question: "Mutual funds are?",
+    questionHi: "म्यूचुअल फंड हैं?",
+    options: [
+      { id: "A", text: "Individual stocks", textHi: "व्यक्तिगत स्टॉक" },
+      { id: "B", text: "Pooled investments managed by pros", textHi: "पेशेवरों द्वारा प्रबंधित पूल्ड निवेश" },
+      { id: "C", text: "Bank loans", textHi: "बैंक ऋण" },
+      { id: "D", text: "Gold bars", textHi: "सोने की बार" }
+    ],
+    correct: "B",
+    explanation: "Mutual funds pool money from multiple investors to invest in diversified portfolios managed by professional fund managers.",
+    explanationHi: "म्यूचुअल फंड कई निवेशकों से पैसा जुटाकर पेशेवर फंड मैनेजरों द्वारा प्रबंधित विविध पोर्टफोलियो में निवेश करते हैं।",
+    points: 10,
+    moduleId: "grow-your-money-wisely"
+  },
+  "sip-meaning": {
+    question: "SIP means?",
+    questionHi: "SIP का मतलब है?",
+    options: [
+      { id: "A", text: "One-time big investment", textHi: "एकमुश्त बड़ा निवेश" },
+      { id: "B", text: "Regular small investments", textHi: "नियमित छोटे निवेश" },
+      { id: "C", text: "Selling shares", textHi: "शेयर बेचना" },
+      { id: "D", text: "Bank fixed deposit", textHi: "बैंक फिक्स्ड डिपॉजिट" }
+    ],
+    correct: "B",
+    explanation: "SIP (Systematic Investment Plan) involves investing a fixed amount regularly, typically monthly, in mutual funds.",
+    explanationHi: "SIP (सिस्टमैटिक इन्वेस्टमेंट प्लान) में म्यूचुअल फंड में नियमित रूप से, आमतौर पर मासिक, एक निश्चित राशि का निवेश शामिल होता है।",
+    points: 10,
+    moduleId: "grow-your-money-wisely"
+  },
+  "gold-beginner": {
+    question: "Best way for beginners to invest in gold?",
+    questionHi: "शुरुआती लोगों के लिए सोने में निवेश का सबसे अच्छा तरीका?",
+    options: [
+      { id: "A", text: "Physical jewellery", textHi: "भौतिक आभूषण" },
+      { id: "B", text: "Gold ETF/Sovereign Bond", textHi: "गोल्ड ETF/सॉवरेन बॉन्ड" },
+      { id: "C", text: "Coins from market", textHi: "बाजार से सिक्के" },
+      { id: "D", text: "None", textHi: "कोई नहीं" }
+    ],
+    correct: "B",
+    explanation: "Gold ETFs and Sovereign Gold Bonds are digital, secure, and often provide additional interest, making them ideal for beginners.",
+    explanationHi: "गोल्ड ETF और सॉवरेन गोल्ड बॉन्ड डिजिटल, सुरक्षित होते हैं और अक्सर अतिरिक्त ब्याज प्रदान करते हैं, जिससे वे शुरुआती लोगों के लिए आदर्श होते हैं।",
+    points: 10,
+    moduleId: "grow-your-money-wisely"
+  },
+  "80c-max": {
+    question: "Max deduction under 80C?",
+    questionHi: "80C के तहत अधिकतम कटौती?",
+    options: [
+      { id: "A", text: "₹50,000", textHi: "₹50,000" },
+      { id: "B", text: "₹1.5 lakh", textHi: "₹1.5 लाख" },
+      { id: "C", text: "₹5 lakh", textHi: "₹5 लाख" },
+      { id: "D", text: "No limit", textHi: "कोई सीमा नहीं" }
+    ],
+    correct: "B",
+    explanation: "Section 80C allows tax deduction up to ₹1.5 lakh for specified investments and expenses.",
+    explanationHi: "धारा 80C निर्दिष्ट निवेश और व्यय के लिए ₹1.5 लाख तक की कर कटौती की अनुमति देती है।",
+    points: 10,
+    moduleId: "grow-your-money-wisely"
+  },
+  "investing-mistake": {
+    question: "Biggest first-time investor mistake?",
+    questionHi: "पहली बार निवेशक की सबसे बड़ी गलती?",
+    options: [
+      { id: "A", text: "Starting small", textHi: "छोटे से शुरुआत करना" },
+      { id: "B", text: "Panicking and selling low", textHi: "घबराकर कम दाम पर बेचना" },
+      { id: "C", text: "Saving first", textHi: "पहले बचत करना" },
+      { id: "D", text: "Asking experts", textHi: "विशेषज्ञों से पूछना" }
+    ],
+    correct: "B",
+    explanation: "Emotional decisions like panic selling during market dips are common mistakes that can lock in losses.",
+    explanationHi: "बाजार में गिरावट के दौरान घबराहट में बेचने जैसे भावनात्मक निर्णय आम गलतियाँ हैं जो नुकसान को लॉक कर सकती हैं।",
+    points: 10,
+    moduleId: "grow-your-money-wisely"
   }
 };
 
-// Updated LESSONS array with module grouping and proper order
+// Updated LESSONS array with all 3 modules
 const LESSONS = [
+  // Module 1: Essential Finance Basics (existing)
   {
     id: "otp-safety",
     title: "Never Share Your OTP – Spot Bank Scams",
@@ -398,6 +642,538 @@ const LESSONS = [
     stepsHi: ["डिजिटल गोल्ड के लिए डीमैट अकाउंट खोलें।", "फिजिकल गोल्ड के making charges compare करें।", "निवेश पोर्टफोलियो के 10% से कम रखें।"],
     thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(245,158,11,0.25)_0%,transparent_55%),linear-gradient(135deg,#FEF3C7_0%,#FFFFFF_70%,#FFFBEB_100%)]",
   },
+
+  // Module 2: Save First, Worry Less
+  {
+    id: "savings-account-benefits",
+    title: "Why Your Savings Account Is Your First Superpower",
+    titleHi: "आपका बचत खाता आपकी पहली सुपरपावर क्यों है",
+    category: "Savings",
+    duration: "9:00",
+    difficulty: "Beginner",
+    views: "8.5k",
+    langTag: "Hindi",
+    module: "save-first-worry-less",
+    orderInModule: 1,
+    whyThisOrder: "Foundation of financial security - starts with basic banking",
+    youtube: [
+      {
+        id: "hA3Yi4RdY50",
+        title: "Savings Account Explained in Hindi (Basics, Interest, Opening)",
+        channel: "Asset Yogi",
+        description: "Clear explanation for beginners about savings accounts, interest, and how to open one.",
+        duration: "9:00"
+      },
+      {
+        id: "nhX5UUPcY10",
+        title: "Importance of Saving in Hindi (Beginner Guide)",
+        channel: "Pranjal Kamra",
+        description: "Motivational guide about why saving matters and how to start.",
+        duration: "7:00"
+      },
+    ],
+    summaryEn: [
+      "A dedicated savings account is your foundation for financial security.",
+      "No-fee options like PMJDY make banking accessible to everyone.",
+      "Easy access to your money when you need it most.",
+    ],
+    summaryHi: [
+      "एक समर्पित बचत खाता वित्तीय सुरक्षा की आपकी नींव है।",
+      "PMJDY जैसे नो-फी विकल्प बैंकिंग को सभी के लिए सुलभ बनाते हैं।",
+      "जब आपको सबसे ज्यादा जरूरत हो तो आपके पैसे तक आसान पहुंच।",
+    ],
+    warningEn: "Never share your banking details with anyone. Always use official bank channels.",
+    warningHi: "कभी भी अपनी बैंकिंग जानकारी किसी के साथ साझा न करें। हमेशा आधिकारिक बैंक चैनलों का उपयोग करें।",
+    stepsEn: ["Choose a bank with no minimum balance requirement.", "Enable SMS and email alerts.", "Set up auto-transfer from salary account."],
+    stepsHi: ["न्यूनतम शेष राशि की आवश्यकता वाला बैंक चुनें।", "एसएमएस और ईमेल अलर्ट सक्षम करें।", "वेतन खाते से ऑटो-ट्रांसफर सेट करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.25)_0%,transparent_55%),linear-gradient(135deg,#DBEAFE_0%,#FFFFFF_60%,#E0E7FF_100%)]",
+  },
+  {
+    id: "daily-savings-growth",
+    title: "The Magic of Small Daily Savings",
+    titleHi: "छोटी दैनिक बचत का जादू",
+    category: "Savings",
+    duration: "8:00",
+    difficulty: "Beginner",
+    views: "7.2k",
+    langTag: "Hindi",
+    module: "save-first-worry-less",
+    orderInModule: 2,
+    whyThisOrder: "Shows how small amounts can grow - motivates consistent saving",
+    youtube: [
+      {
+        id: "power-of-compounding",
+        title: "Power of Compounding: Small Savings Grow Big (Hindi)",
+        channel: "Money Purse",
+        description: "Simple calculations showing how small daily savings compound into big wealth over time.",
+        duration: "8:00"
+      },
+      {
+        id: "small-investments",
+        title: "Power of Compounding in Hindi (Small Investments)",
+        channel: "Abhishek Kar",
+        description: "Easy visuals explaining compounding with small investment examples.",
+        duration: "6:00"
+      },
+    ],
+    summaryEn: [
+      "Tiny daily savings compound into significant wealth over time.",
+      "₹50 per day can become ₹1 lakh in 5 years with interest.",
+      "Consistency is more important than the amount.",
+    ],
+    summaryHi: [
+      "छोटी दैनिक बचत समय के साथ महत्वपूर्ण धन में बदल जाती है।",
+      "ब्याज के साथ ₹50 प्रतिदिन 5 साल में ₹1 लाख हो सकता है।",
+      "राशि की तुलना में निरंतरता अधिक महत्वपूर्ण है।",
+    ],
+    warningEn: "Don't wait to save 'more' - start with whatever you can today.",
+    warningHi: "'अधिक' बचत करने की प्रतीक्षा न करें - आज जो कुछ भी कर सकते हैं उससे शुरुआत करें।",
+    stepsEn: ["Start with ₹10-50 per day.", "Use a separate piggy bank or digital wallet.", "Review and increase monthly."],
+    stepsHi: ["₹10-50 प्रतिदिन से शुरुआत करें।", "एक अलग गुल्लक या डिजिटल वॉलेट का उपयोग करें।", "मासिक समीक्षा करें और बढ़ाएं।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(168,85,247,0.25)_0%,transparent_55%),linear-gradient(135deg,#F3E8FF_0%,#FFFFFF_60%,#E0E7FF_100%)]",
+  },
+  {
+    id: "emergency-fund-coverage",
+    title: "Emergency Fund: Your Safety Shield",
+    titleHi: "आपातकालीन फंड: आपकी सुरक्षा ढाल",
+    category: "Emergency Fund",
+    duration: "10:00",
+    difficulty: "Beginner",
+    views: "9.8k",
+    langTag: "Hindi",
+    module: "save-first-worry-less",
+    orderInModule: 3,
+    whyThisOrder: "Critical financial safety net - follows basic saving habits",
+    youtube: [
+      {
+        id: "emergency-fund-formula",
+        title: "Building an Emergency Fund in Hindi (6-Step Formula)",
+        channel: "Deepak Bajaj",
+        description: "Practical steps to create and maintain an emergency fund.",
+        duration: "10:00"
+      },
+      {
+        id: "emergency-fund-guide",
+        title: "How to Build Emergency Fund (Hindi Guide)",
+        channel: "Groww",
+        description: "Beginner-friendly guide to emergency funds.",
+        duration: "9:00"
+      },
+    ],
+    summaryEn: [
+      "Emergency fund covers 3-6 months of living expenses.",
+      "Keep it in safe, liquid options like savings account.",
+      "Separate from other savings to avoid temptation.",
+    ],
+    summaryHi: [
+      "आपातकालीन फंड 3-6 महीने के जीवनयापन खर्च को कवर करता है।",
+      "इसे बचत खाते जैसे सुरक्षित, तरल विकल्पों में रखें।",
+      "प्रलोभन से बचने के लिए अन्य बचत से अलग रखें।",
+    ],
+    warningEn: "Don't touch emergency fund except for real emergencies like job loss or medical crisis.",
+    warningHi: "नौकरी छूटने या चिकित्सा संकट जैसी वास्तविक आपात स्थितियों को छोड़कर आपातकालीन फंड को न छुएं।",
+    stepsEn: ["Calculate monthly expenses.", "Set target amount (3-6 months).", "Save systematically each month."],
+    stepsHi: ["मासिक खर्च की गणना करें।", "लक्ष्य राशि निर्धारित करें (3-6 महीने)।", "हर महीने व्यवस्थित रूप से बचत करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(14,165,233,0.25)_0%,transparent_55%),linear-gradient(135deg,#E0F2FE_0%,#FFFFFF_60%,#F0F9FF_100%)]",
+  },
+  {
+    id: "rd-difference",
+    title: "Recurring Deposit (RD) – Save Automatically Every Month",
+    titleHi: "आवर्ती जमा (RD) – हर महीने स्वचालित रूप से बचाएं",
+    category: "Banking",
+    duration: "9:00",
+    difficulty: "Beginner",
+    views: "6.5k",
+    langTag: "Hindi",
+    module: "save-first-worry-less",
+    orderInModule: 4,
+    whyThisOrder: "Introduces disciplined saving tools after emergency fund",
+    youtube: [
+      {
+        id: "rd-explained",
+        title: "Recurring Deposit Explained in Hindi (Full Guide)",
+        channel: "FinBaba",
+        description: "Complete guide to RD benefits, calculations, and how to start.",
+        duration: "9:00"
+      },
+      {
+        id: "rd-basics",
+        title: "What is RD in Hindi? (Simple Explanation)",
+        channel: "Groww",
+        description: "Basic explanation of Recurring Deposits for beginners.",
+        duration: "8:00"
+      },
+    ],
+    summaryEn: [
+      "RD is an auto-save tool with fixed monthly deposits.",
+      "Offers guaranteed interest higher than savings accounts.",
+      "Builds financial discipline through regular contributions.",
+    ],
+    summaryHi: [
+      "RD निश्चित मासिक जमा के साथ एक ऑटो-सेव टूल है।",
+      "बचत खातों की तुलना में अधिक गारंटीकृत ब्याज प्रदान करता है।",
+      "नियमित योगदान के माध्यम से वित्तीय अनुशासन बनाता है।",
+    ],
+    warningEn: "Premature withdrawal may attract penalties. Choose tenure carefully.",
+    warningHi: "समय से पहले निकासी पर जुर्माना लग सकता है। कार्यकाल सावधानी से चुनें।",
+    stepsEn: ["Decide monthly amount and tenure.", "Open RD at bank/post office.", "Set up auto-debit for convenience."],
+    stepsHi: ["मासिक राशि और कार्यकाल तय करें।", "बैंक/डाकघर में RD खोलें।", "सुविधा के लिए ऑटो-डेबिट सेट करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(34,197,94,0.25)_0%,transparent_55%),linear-gradient(135deg,#DCFCE7_0%,#FFFFFF_60%,#F0FDF4_100%)]",
+  },
+  {
+    id: "fd-advantage",
+    title: "Fixed Deposit (FD) – Let Your Money Grow Safely",
+    titleHi: "फिक्स्ड डिपॉजिट (FD) – अपने पैसे को सुरक्षित रूप से बढ़ने दें",
+    category: "Banking",
+    duration: "8:00",
+    difficulty: "Beginner",
+    views: "7.8k",
+    langTag: "Hindi",
+    module: "save-first-worry-less",
+    orderInModule: 5,
+    whyThisOrder: "Safe growth option after disciplined saving tools",
+    youtube: [
+      {
+        id: "fd-beginners",
+        title: "Fixed Deposit Explained for Beginners in Hindi",
+        channel: "FinBaba",
+        description: "Pros and cons of FDs, interest rates, and how to start.",
+        duration: "8:00"
+      },
+      {
+        id: "fd-guide",
+        title: "FD Full Guide in Hindi (Interest, Risks)",
+        channel: "Sagar Sinha",
+        description: "Detailed guide to Fixed Deposits including tax implications.",
+        duration: "9:00"
+      },
+    ],
+    summaryEn: [
+      "FD offers guaranteed fixed returns with low risk.",
+      "Lump-sum deposit for fixed tenure with predetermined interest.",
+      "Consider tax implications on interest income.",
+    ],
+    summaryHi: [
+      "FD कम जोखिम के साथ गारंटीकृत निश्चित रिटर्न प्रदान करता है।",
+      "पूर्व निर्धारित ब्याज के साथ निश्चित कार्यकाल के लिए एकमुश्त जमा।",
+      "ब्याज आय पर कर प्रभावों पर विचार करें।",
+    ],
+    warningEn: "FD interest is taxable. Consider tax-saving FDs for better returns.",
+    warningHi: "FD ब्याज कर योग्य है। बेहतर रिटर्न के लिए टैक्स-सेविंग FD पर विचार करें।",
+    stepsEn: ["Compare bank FD rates.", "Choose tenure based on needs.", "Consider FD laddering for liquidity."],
+    stepsHi: ["बैंक FD दरों की तुलना करें।", "आवश्यकताओं के आधार पर कार्यकाल चुनें।", "तरलता के लिए FD लैडरिंग पर विचार करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(245,158,11,0.25)_0%,transparent_55%),linear-gradient(135deg,#FEF3C7_0%,#FFFFFF_60%,#FFFBEB_100%)]",
+  },
+  {
+    id: "post-office-rural",
+    title: "Post Office vs Bank – Which Is Better for You?",
+    titleHi: "पोस्ट ऑफिस बनाम बैंक – आपके लिए कौन सा बेहतर है?",
+    category: "Banking",
+    duration: "7:00",
+    difficulty: "Beginner",
+    views: "5.9k",
+    langTag: "Hindi",
+    module: "save-first-worry-less",
+    orderInModule: 6,
+    whyThisOrder: "Helps choose right institution based on location/needs",
+    youtube: [
+      {
+        id: "post-office-vs-bank",
+        title: "Post Office vs Bank Savings Account Comparison (Hindi)",
+        channel: "FinBaba",
+        description: "Full comparison of post office and bank savings options.",
+        duration: "7:00"
+      },
+      {
+        id: "which-better",
+        title: "Which is Better: Post Office or Bank Savings? (Hindi)",
+        channel: "Groww",
+        description: "Quick pros and cons for rural and urban users.",
+        duration: "6:00"
+      },
+    ],
+    summaryEn: [
+      "Post offices have wider reach in rural areas.",
+      "Banks offer more digital services and ATMs.",
+      "Compare interest rates, accessibility, and services.",
+    ],
+    summaryHi: [
+      "पोस्ट ऑफिस का ग्रामीण क्षेत्रों में व्यापक पहुंच है।",
+      "बैंक अधिक डिजिटल सेवाएं और एटीएम प्रदान करते हैं।",
+      "ब्याज दरों, पहुंच और सेवाओं की तुलना करें।",
+    ],
+    warningEn: "Consider transaction costs, accessibility, and digital features before choosing.",
+    warningHi: "चुनने से पहले लेनदेन लागत, पहुंच और डिजिटल सुविधाओं पर विचार करें।",
+    stepsEn: ["Assess location and access needs.", "Compare interest rates.", "Check digital banking features."],
+    stepsHi: ["स्थान और पहुंच आवश्यकताओं का आकलन करें।", "ब्याज दरों की तुलना करें।", "डिजिटल बैंकिंग सुविधाओं की जाँच करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(239,68,68,0.25)_0%,transparent_55%),linear-gradient(135deg,#FEE2E2_0%,#FFFFFF_60%,#FEF2F2_100%)]",
+  },
+
+  // Module 3: Grow Your Money Wisely
+  {
+    id: "investing-early",
+    title: "What Is Investing & Why Start Now?",
+    titleHi: "निवेश क्या है और अभी क्यों शुरू करें?",
+    category: "Investing",
+    duration: "9:00",
+    difficulty: "Beginner",
+    views: "10.2k",
+    langTag: "Hindi",
+    module: "grow-your-money-wisely",
+    orderInModule: 1,
+    whyThisOrder: "Foundation of investing mindset - importance of starting early",
+    youtube: [
+      {
+        id: "investing-now",
+        title: "What is Investing & Why Start Now? (Hindi)",
+        channel: "Groww",
+        description: "Motivational guide for 20s on why time is your biggest asset in investing.",
+        duration: "9:00"
+      },
+      {
+        id: "investing-kya-hai",
+        title: "Investing Kya Hai? Simple Explanation in Hindi",
+        channel: "True Investing",
+        description: "Basic explanation of what investing means for beginners.",
+        duration: "8:00"
+      },
+    ],
+    summaryEn: [
+      "Time is your biggest asset in investing through compounding.",
+      "Starting early beats waiting for 'big money' to invest.",
+      "Small regular investments can grow significantly over decades.",
+    ],
+    summaryHi: [
+      "चक्रवृद्धि के माध्यम से निवेश में समय आपकी सबसे बड़ी संपत्ति है।",
+      "निवेश करने के लिए 'बड़े पैसे' की प्रतीक्षा करने की तुलना में जल्दी शुरू करना बेहतर है।",
+      "छोटे नियमित निवेश दशकों में काफी बढ़ सकते हैं।",
+    ],
+    warningEn: "Don't delay investing thinking you need large sums. Start small, start now.",
+    warningHi: "यह सोचकर निवेश में देरी न करें कि आपको बड़ी रकम चाहिए। छोटी शुरुआत करें, अभी शुरू करें।",
+    stepsEn: ["Understand your risk tolerance.", "Start with education before money.", "Set clear financial goals."],
+    stepsHi: ["अपनी जोखिम सहनशीलता समझें।", "पैसे से पहले शिक्षा से शुरुआत करें।", "स्पष्ट वित्तीय लक्ष्य निर्धारित करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(139,92,246,0.25)_0%,transparent_55%),linear-gradient(135deg,#F5F3FF_0%,#FFFFFF_60%,#FAF5FF_100%)]",
+  },
+  {
+    id: "mutual-funds-explained",
+    title: "Mutual Funds Made Super Simple",
+    titleHi: "म्यूचुअल फंड सुपर सरल बनाया गया",
+    category: "Mutual Funds",
+    duration: "11:00",
+    difficulty: "Beginner",
+    views: "12.5k",
+    langTag: "Hindi",
+    module: "grow-your-money-wisely",
+    orderInModule: 2,
+    whyThisOrder: "Introduces most accessible investment vehicle for beginners",
+    youtube: [
+      {
+        id: "mf-simple",
+        title: "Mutual Funds Explained Simply in Hindi",
+        channel: "Asset Yogi",
+        description: "Beginner guide to mutual funds as pooled investments managed by experts.",
+        duration: "11:00"
+      },
+      {
+        id: "mf-beginners",
+        title: "What are Mutual Funds? (Hindi for Beginners)",
+        channel: "Sanjay Kathuria",
+        description: "Easy language explanation of mutual funds for complete beginners.",
+        duration: "10:00"
+      },
+    ],
+    summaryEn: [
+      "Mutual funds are pooled investments managed by professionals.",
+      "Diversified across stocks, bonds, or other assets.",
+      "Suitable for beginners due to professional management.",
+    ],
+    summaryHi: [
+      "म्यूचुअल फंड पेशेवरों द्वारा प्रबंधित पूल्ड निवेश हैं।",
+      "स्टॉक, बॉन्ड या अन्य संपत्तियों में विविधतापूर्ण।",
+      "पेशेवर प्रबंधन के कारण शुरुआती लोगों के लिए उपयुक्त।",
+    ],
+    warningEn: "Past performance doesn't guarantee future returns. Understand risk before investing.",
+    warningHi: "पिछला प्रदर्शन भविष्य के रिटर्न की गारंटी नहीं देता। निवेश से पहले जोखिम समझें।",
+    stepsEn: ["Learn about equity, debt, hybrid funds.", "Check expense ratios.", "Review fund manager track record."],
+    stepsHi: ["इक्विटी, डेट, हाइब्रिड फंड के बारे में जानें।", "व्यय अनुपात की जाँच करें।", "फंड मैनेजर के ट्रैक रिकॉर्ड की समीक्षा करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.25)_0%,transparent_55%),linear-gradient(135deg,#ECFEFF_0%,#FFFFFF_60%,#F0F9FF_100%)]",
+  },
+  {
+    id: "sip-meaning",
+    title: "Start SIP with Just ₹500 – Step by Step",
+    titleHi: "सिर्फ ₹500 से SIP शुरू करें – चरण दर चरण",
+    category: "Mutual Funds",
+    duration: "10:00",
+    difficulty: "Beginner",
+    views: "15.3k",
+    langTag: "Hindi",
+    module: "grow-your-money-wisely",
+    orderInModule: 3,
+    whyThisOrder: "Practical implementation after understanding mutual funds",
+    youtube: [
+      {
+        id: "sip-step-by-step",
+        title: "How to Start SIP with ₹500 Step by Step (Hindi)",
+        channel: "Zerodha",
+        description: "Tutorial on opening SIP, KYC, and first SIP setup with apps like Groww/Zerodha.",
+        duration: "10:00"
+      },
+      {
+        id: "sip-500",
+        title: "Start SIP in Mutual Funds from ₹500 (Hindi)",
+        channel: "Pushkar Raj Thakur",
+        description: "Practical guide to starting SIP with small amounts.",
+        duration: "9:00"
+      },
+    ],
+    summaryEn: [
+      "SIP allows regular small investments in mutual funds.",
+      "Start with as little as ₹500 per month.",
+      "Rupee cost averaging reduces risk over time.",
+    ],
+    summaryHi: [
+      "SIP म्यूचुअल फंड में नियमित छोटे निवेश की अनुमति देता है।",
+      "प्रति माह ₹500 जितनी कम राशि से शुरुआत करें।",
+      "रुपये की लागत औसतन समय के साथ जोखिम को कम करती है।",
+    ],
+    warningEn: "SIPs don't guarantee profits. Market risks apply. Stay invested for long term.",
+    warningHi: "SIP लाभ की गारंटी नहीं देते। बाजार जोखिम लागू होते हैं। लंबी अवधि के लिए निवेशित रहें।",
+    stepsEn: ["Download investment app (Groww/Zerodha).", "Complete KYC.", "Choose fund and set up auto-debit."],
+    stepsHi: ["निवेश ऐप डाउनलोड करें (Groww/Zerodha)।", "KYC पूरा करें।", "फंड चुनें और ऑटो-डेबिट सेट करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(34,197,94,0.25)_0%,transparent_55%),linear-gradient(135deg,#DCFCE7_0%,#FFFFFF_60%,#F0FDF4_100%)]",
+  },
+  {
+    id: "gold-beginner",
+    title: "Gold Investing for Beginners – Safe & Smart",
+    titleHi: "शुरुआती लोगों के लिए सोने का निवेश – सुरक्षित और स्मार्ट",
+    category: "Gold Investing",
+    duration: "9:00",
+    difficulty: "Beginner",
+    views: "8.7k",
+    langTag: "Hindi",
+    module: "grow-your-money-wisely",
+    orderInModule: 4,
+    whyThisOrder: "Introduces safe investment option after equity exposure",
+    youtube: [
+      {
+        id: "gold-beginners-guide",
+        title: "Gold Investing for Beginners in Hindi",
+        channel: "Ankur Warikoo",
+        description: "Best ways to invest in gold beyond physical jewellery.",
+        duration: "9:00"
+      },
+      {
+        id: "gold-silver",
+        title: "How to Invest in Gold & Silver (Hindi)",
+        channel: "Ankur Warikoo",
+        description: "Detailed guide to modern gold investment options.",
+        duration: "8:00"
+      },
+    ],
+    summaryEn: [
+      "Gold is a safe hedge against inflation and market volatility.",
+      "Modern options: Digital gold, Gold ETF, Sovereign Gold Bonds.",
+      "Avoid storage and purity issues of physical gold.",
+    ],
+    summaryHi: [
+      "सोना मुद्रास्फीति और बाजार की अस्थिरता के खिलाफ एक सुरक्षित हेज है।",
+      "आधुनिक विकल्प: डिजिटल गोल्ड, गोल्ड ETF, सॉवरेन गोल्ड बॉन्ड।",
+      "भौतिक सोने की भंडारण और शुद्धता समस्याओं से बचें।",
+    ],
+    warningEn: "Gold doesn't generate regular income. Allocate only 5-10% of portfolio to gold.",
+    warningHi: "सोना नियमित आय उत्पन्न नहीं करता है। पोर्टफोलियो का केवल 5-10% सोने में आवंटित करें।",
+    stepsEn: ["Open demat account for Gold ETFs.", "Compare Sovereign Gold Bond issues.", "Start with small allocation."],
+    stepsHi: ["गोल्ड ETF के लिए डीमैट खाता खोलें।", "सॉवरेन गोल्ड बॉन्ड इश्यू की तुलना करें।", "छोटे आवंटन से शुरुआत करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(245,158,11,0.25)_0%,transparent_55%),linear-gradient(135deg,#FEF3C7_0%,#FFFFFF_60%,#FFFBEB_100%)]",
+  },
+  {
+    id: "80c-max",
+    title: "Tax-Saving Investments Under 80C",
+    titleHi: "80C के तहत कर-बचत निवेश",
+    category: "Tax Planning",
+    duration: "11:00",
+    difficulty: "Intermediate",
+    views: "14.2k",
+    langTag: "Hindi",
+    module: "grow-your-money-wisely",
+    orderInModule: 5,
+    whyThisOrder: "Teaches tax efficiency - important for growing wealth",
+    youtube: [
+      {
+        id: "80c-options",
+        title: "Section 80C Tax Saving Options Explained in Hindi",
+        channel: "Anil Singhvi",
+        description: "Full list of 80C options with pros and cons.",
+        duration: "11:00"
+      },
+      {
+        id: "tax-saving",
+        title: "Tax Saving Under 80C in Hindi",
+        channel: "CA Sakchi Jain",
+        description: "Deductions available under Section 80C.",
+        duration: "10:00"
+      },
+    ],
+    summaryEn: [
+      "Save up to ₹1.5 lakh tax under Section 80C.",
+      "Options: PPF, ELSS, NSC, life insurance, etc.",
+      "Choose based on risk, returns, and lock-in period.",
+    ],
+    summaryHi: [
+      "धारा 80C के तहत ₹1.5 लाख तक कर बचाएं।",
+      "विकल्प: पीपीएफ, ईएलएसएस, एनएससी, जीवन बीमा, आदि।",
+      "जोखिम, रिटर्न और लॉक-इन अवधि के आधार पर चुनें।",
+    ],
+    warningEn: "Don't invest only for tax saving. Consider returns and liquidity needs.",
+    warningHi: "केवल कर बचत के लिए निवेश न करें। रिटर्न और तरलता आवश्यकताओं पर विचार करें।",
+    stepsEn: ["List eligible 80C investments.", "Compare returns and lock-in periods.", "Allocate based on financial goals."],
+    stepsHi: ["पात्र 80C निवेश सूचीबद्ध करें।", "रिटर्न और लॉक-इन अवधियों की तुलना करें।", "वित्तीय लक्ष्यों के आधार पर आवंटित करें।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.25)_0%,transparent_55%),linear-gradient(135deg,#DBEAFE_0%,#FFFFFF_60%,#E0E7FF_100%)]",
+  },
+  {
+    id: "investing-mistake",
+    title: "Common Mistakes to Avoid in First Investments",
+    titleHi: "पहले निवेश में करने से बचने वाली आम गलतियाँ",
+    category: "Investing",
+    duration: "8:00",
+    difficulty: "Beginner",
+    views: "13.8k",
+    langTag: "Hindi",
+    module: "grow-your-money-wisely",
+    orderInModule: 6,
+    whyThisOrder: "Final lesson - helps avoid pitfalls after learning all concepts",
+    youtube: [
+      {
+        id: "investing-mistakes",
+        title: "Don't Make These 10 Investing Mistakes (Hindi)",
+        channel: "Ankur Warikoo",
+        description: "Common errors beginners make and how to avoid them.",
+        duration: "8:00"
+      },
+      {
+        id: "mf-mistakes",
+        title: "Beginner Mutual Fund Mistakes (Hindi)",
+        channel: "Labour Law Advisor",
+        description: "Lessons learned from real investor stories.",
+        duration: "7:00"
+      },
+    ],
+    summaryEn: [
+      "Don't chase high returns without understanding risk.",
+      "Avoid panic selling during market dips.",
+      "Stay consistent with investments regardless of market noise.",
+    ],
+    summaryHi: [
+      "जोखिम को समझे बिना उच्च रिटर्न का पीछा न करें।",
+      "बाजार में गिरावट के दौरान घबराहट में बेचने से बचें।",
+      "बाजार के शोर की परवाह किए बिना निवेश के साथ सुसंगत रहें।",
+    ],
+    warningEn: "Emotional decisions are the biggest wealth destroyers. Stick to your plan.",
+    warningHi: "भावनात्मक निर्णय सबसे बड़े धन विनाशक हैं। अपनी योजना से चिपके रहें।",
+    stepsEn: ["Create an investment plan.", "Set realistic expectations.", "Review portfolio annually, not daily."],
+    stepsHi: ["एक निवेश योजना बनाएं।", "यथार्थवादी अपेक्षाएं निर्धारित करें।", "पोर्टफोलियो की वार्षिक समीक्षा करें, दैनिक नहीं।"],
+    thumbStyle: "bg-[radial-gradient(circle_at_30%_20%,rgba(239,68,68,0.25)_0%,transparent_55%),linear-gradient(135deg,#FEE2E2_0%,#FFFFFF_60%,#FEF2F2_100%)]",
+  },
 ];
 
 const DEFAULT_SAFETY_TIP = "Enable Two-Factor Authentication (2FA) on your UPI apps and email. It's the strongest shield against account takeovers.";
@@ -416,6 +1192,9 @@ export default function LearnScreen() {
   const [badges, setBadges] = useState(() => readJSON(LS.badges, []));
   const [quizScores, setQuizScores] = useState(() => readJSON(LS.quizScores, {}));
   const [points, setPoints] = useState(() => Number(localStorage.getItem(LS.points)) || 0);
+  const [currentModuleId, setCurrentModuleId] = useState(() => {
+    return localStorage.getItem(LS.currentModule) || MODULES[0].id;
+  });
 
   // UI states
   const [summaryLang, setSummaryLang] = useState(() => {
@@ -429,7 +1208,9 @@ export default function LearnScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [openLesson, setOpenLesson] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
-  const [activeModule, setActiveModule] = useState(ESSENTIAL_MODULE);
+  const [activeModule, setActiveModule] = useState(() => {
+    return MODULES.find(m => m.id === currentModuleId) || MODULES[0];
+  });
   const [videoPlayerOpen, setVideoPlayerOpen] = useState(false);
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [showCertificate, setShowCertificate] = useState(false);
@@ -449,6 +1230,11 @@ export default function LearnScreen() {
   const completedInModule = moduleLessons.filter(l => completed.has(l.id)).length;
   const moduleProgressPercentage = (completedInModule / activeModule.totalLessons) * 100;
   const isModuleComplete = completedInModule === activeModule.totalLessons;
+
+  // Calculate total progress across all modules
+  const totalLessons = LESSONS.length;
+  const totalCompleted = Array.from(completed).length;
+  const totalProgressPercentage = (totalCompleted / totalLessons) * 100;
 
   // Calculate module quiz score
   const moduleQuizScore = useMemo(() => {
@@ -532,6 +1318,14 @@ export default function LearnScreen() {
               setPoints(learningData.points);
               localStorage.setItem(LS.points, String(learningData.points));
             }
+            
+            // Load current module
+            if (learningData.currentModule) {
+              setCurrentModuleId(learningData.currentModule);
+              localStorage.setItem(LS.currentModule, learningData.currentModule);
+              const module = MODULES.find(m => m.id === learningData.currentModule);
+              if (module) setActiveModule(module);
+            }
           }
         }
       } catch (error) {
@@ -597,8 +1391,9 @@ export default function LearnScreen() {
     if (fbUser) {
       saveToFirebase(FB_KEYS.QUIZ_SCORES, quizScores);
       saveToFirebase(FB_KEYS.POINTS, points);
+      saveToFirebase(FB_KEYS.CURRENT_MODULE, currentModuleId);
     }
-  }, [quizScores, points, fbUser]);
+  }, [quizScores, points, currentModuleId, fbUser]);
 
   // Persist local storage
   useEffect(() => {
@@ -633,6 +1428,10 @@ export default function LearnScreen() {
     localStorage.setItem(LS.points, String(points));
   }, [points]);
 
+  useEffect(() => {
+    localStorage.setItem(LS.currentModule, currentModuleId);
+  }, [currentModuleId]);
+
   const appLang = localStorage.getItem("dhan-saathi-language") || "english";
   const ttsLang = appLang === "hindi" ? "hi-IN" : "en-IN";
 
@@ -647,7 +1446,7 @@ export default function LearnScreen() {
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(LESSONS.map((l) => l.category)));
-    return ["All Topics", "Scam Safety", "Budgeting", "Savings", "Mutual Funds", "Gold Investing", "UPI & Digital Payments"];
+    return ["All Topics", "Scam Safety", "Budgeting", "Savings", "Mutual Funds", "Gold Investing", "UPI & Digital Payments", "Emergency Fund", "Banking", "Investing", "Tax Planning"];
   }, []);
 
   const lessons = useMemo(() => {
@@ -924,8 +1723,8 @@ export default function LearnScreen() {
     
     // Award badge based on score
     if (correctCount >= 5) {
-      if (!badges.includes("Safety Champion")) {
-        const newBadges = [...badges, "Safety Champion"];
+      if (!badges.includes(activeModule.badgeUnlocked)) {
+        const newBadges = [...badges, activeModule.badgeUnlocked];
         setBadges(newBadges);
         saveToFirebase(FB_KEYS.BADGES, newBadges);
       }
@@ -954,6 +1753,55 @@ export default function LearnScreen() {
       setTimeout(() => {
         setShowCertificate(true);
       }, 500);
+    }
+  };
+
+  const handleModuleChange = (moduleId) => {
+    setCurrentModuleId(moduleId);
+    const module = MODULES.find(m => m.id === moduleId);
+    if (module) {
+      setActiveModule(module);
+    }
+  };
+
+  const getModuleIcon = (module) => {
+    switch (module.icon) {
+      case "PiggyBank":
+        return <PiggyBank className="h-6 w-6 text-white" />;
+      case "TrendingUp":
+        return <TrendingUpIcon className="h-6 w-6 text-white" />;
+      case "ShieldRupee":
+      default:
+        return (
+          <div className="relative">
+            <Shield className="h-6 w-6 text-white" />
+            <IndianRupee className="h-4 w-4 text-white absolute -bottom-1 -right-1" />
+          </div>
+        );
+    }
+  };
+
+  const getAccentColorClass = (module) => {
+    switch (module.accentColor) {
+      case "blue":
+        return "from-blue-600 to-blue-500";
+      case "purple":
+        return "from-purple-600 to-indigo-500";
+      case "emerald":
+      default:
+        return "from-emerald-600 to-green-500";
+    }
+  };
+
+  const getAccentBgClass = (module) => {
+    switch (module.accentColor) {
+      case "blue":
+        return "bg-blue-50 border-blue-200 text-blue-900";
+      case "purple":
+        return "bg-purple-50 border-purple-200 text-purple-900";
+      case "emerald":
+      default:
+        return "bg-emerald-50 border-emerald-200 text-emerald-900";
     }
   };
 
@@ -1191,7 +2039,7 @@ export default function LearnScreen() {
                   Learn Financial Basics
                 </h1>
                 <p className="text-gray-600 mt-2 max-w-2xl">
-                  Master money management with curated lessons. {fbUser ? "Your progress syncs across devices." : "Sign in to save your progress."}
+                  Master money management with curated lessons across {MODULES.length} modules. {fbUser ? "Your progress syncs across devices." : "Sign in to save your progress."}
                 </p>
                 
                 <div className="mt-4 flex items-center gap-4">
@@ -1243,7 +2091,98 @@ export default function LearnScreen() {
             </div>
           </div>
 
-          {/* FEATURED MODULE */}
+          {/* MODULES SELECTOR */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Available Modules</h2>
+              <span className="text-sm text-gray-600">{MODULES.length} modules • All free</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {MODULES.map((module, index) => {
+                const isActive = activeModule.id === module.id;
+                const moduleProgressData = moduleProgress[module.id] || { completedLessons: 0 };
+                const progressPercentage = (moduleProgressData.completedLessons / module.totalLessons) * 100;
+                const moduleLessonsCount = LESSONS.filter(l => l.module === module.id).length;
+                const completedInThisModule = moduleLessonsCount > 0 ? 
+                  moduleLessons.filter(l => completed.has(l.id)).length : 0;
+                
+                return (
+                  <button
+                    key={module.id}
+                    type="button"
+                    onClick={() => handleModuleChange(module.id)}
+                    className={`relative overflow-hidden rounded-2xl border p-5 text-left transition-all hover:-translate-y-1 ${isActive ? 'border-emerald-300 bg-white shadow-lg' : 'border-gray-200 bg-white/70 hover:border-emerald-200 hover:shadow-md'}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`h-14 w-14 rounded-xl bg-gradient-to-br ${getAccentColorClass(module)} border ${isActive ? 'border-white' : 'border-gray-200'} shadow flex items-center justify-center`}>
+                        {getModuleIcon(module)}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-bold px-2 py-1 rounded-full ${getAccentBgClass(module)}`}>
+                            {appLang === 'hindi' ? module.badgeHi : module.badge}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {completedInThisModule}/{module.totalLessons}
+                          </span>
+                        </div>
+                        
+                        <h3 className="font-bold text-gray-900 mt-2">
+                          {appLang === 'hindi' ? module.titleHi : module.titleEn}
+                        </h3>
+                        
+                        <div className="mt-2 flex items-center gap-3 text-xs text-gray-600">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> ~{module.totalDuration} min
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Star className="h-3 w-3 text-amber-500" /> {module.pointsToEarn} pts
+                          </span>
+                          {module.isFree && (
+                            <>
+                              <span>•</span>
+                              <span className="text-emerald-700 font-semibold">FREE</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="mt-3">
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-gray-600">Progress</span>
+                            <span className="font-semibold text-emerald-700">{progressPercentage.toFixed(0)}%</span>
+                          </div>
+                          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div 
+                              className="h-1.5 rounded-full transition-all"
+                              style={{ 
+                                width: `${progressPercentage}%`,
+                                background: `linear-gradient(to right, ${module.accentColor === 'blue' ? '#3b82f6' : module.accentColor === 'purple' ? '#8b5cf6' : '#10b981'}, ${module.accentColor === 'blue' ? '#60a5fa' : module.accentColor === 'purple' ? '#a78bfa' : '#34d399'})`
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {isActive && (
+                      <div className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-emerald-500 border border-white" />
+                    )}
+                    
+                    {module.isFeatured && (
+                      <div className="absolute -top-2 -left-2 px-2 py-1 rounded-md bg-gradient-to-r from-amber-500 to-yellow-500 text-xs font-bold text-white">
+                        Featured
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ACTIVE MODULE DETAILS */}
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-50 via-blue-50 to-cyan-100 border border-emerald-200 shadow-[0_28px_80px_rgba(15,23,42,0.15)] p-6 sm:p-8 mb-8">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute -inset-y-10 -left-1/2 w-1/2 bg-gradient-to-r from-transparent via-white/50 to-transparent blur-xl animate-[sheen_10s_ease-in-out_infinite]" />
@@ -1252,24 +2191,21 @@ export default function LearnScreen() {
             <div className="relative grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 border border-emerald-300 shadow-lg grid place-items-center">
-                    <div className="relative">
-                      <Shield className="h-6 w-6 text-white" />
-                      <IndianRupee className="h-4 w-4 text-white absolute -bottom-1 -right-1" />
-                    </div>
+                  <div className={`h-12 w-12 rounded-2xl bg-gradient-to-br ${getAccentColorClass(activeModule)} border ${activeModule.accentColor === 'emerald' ? 'border-emerald-300' : activeModule.accentColor === 'blue' ? 'border-blue-300' : 'border-purple-300'} shadow-lg grid place-items-center`}>
+                    {getModuleIcon(activeModule)}
                   </div>
                   <div>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 border border-emerald-200 text-emerald-800 text-xs font-bold">
-                      {appLang === 'hindi' ? ESSENTIAL_MODULE.badgeHi : ESSENTIAL_MODULE.badge}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full ${getAccentBgClass(activeModule)} text-xs font-bold`}>
+                      {appLang === 'hindi' ? activeModule.badgeHi : activeModule.badge}
                     </span>
                     <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mt-2">
-                      {appLang === 'hindi' ? ESSENTIAL_MODULE.titleHi : ESSENTIAL_MODULE.titleEn}
+                      {appLang === 'hindi' ? activeModule.titleHi : activeModule.titleEn}
                     </h2>
                   </div>
                 </div>
 
                 <p className="text-gray-700 mb-6">
-                  {appLang === 'hindi' ? ESSENTIAL_MODULE.descriptionHi : ESSENTIAL_MODULE.descriptionEn}
+                  {appLang === 'hindi' ? activeModule.descriptionHi : activeModule.descriptionEn}
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -1305,7 +2241,7 @@ export default function LearnScreen() {
                       <Star className="h-5 w-5 text-amber-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{activeModule.totalLessons * 10} Points</p>
+                      <p className="text-sm font-semibold text-gray-900">{activeModule.pointsToEarn} Points</p>
                       <p className="text-xs text-gray-600">Available to earn</p>
                     </div>
                   </div>
@@ -1315,17 +2251,10 @@ export default function LearnScreen() {
                   <button
                     type="button"
                     onClick={startModuleLearning}
-                    className="px-6 py-3 rounded-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2 animate-pulseGlow"
+                    className={`px-6 py-3 rounded-full bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2 animate-pulseGlow`}
                   >
                     {completedInModule > 0 ? 'Continue Learning' : 'Start Learning'} 
                     <ArrowRight className="h-5 w-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveModule(ESSENTIAL_MODULE)}
-                    className="px-6 py-3 rounded-full bg-white/80 backdrop-blur border border-gray-200 text-gray-900 font-semibold hover:shadow-md transition-all hover:-translate-y-0.5 flex items-center gap-2"
-                  >
-                    View Curriculum
                   </button>
                   {isModuleComplete && (
                     <button
@@ -1335,6 +2264,11 @@ export default function LearnScreen() {
                     >
                       Take Final Quiz
                     </button>
+                  )}
+                  {activeModule.id === "grow-your-money-wisely" && isModuleComplete && (
+                    <div className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-indigo-100 border border-purple-300 text-purple-800 text-sm font-bold">
+                      🎉 Last Free Module Completed!
+                    </div>
                   )}
                 </div>
               </div>
@@ -1347,7 +2281,7 @@ export default function LearnScreen() {
                       cx="60"
                       cy="60"
                       r="46"
-                      stroke="#10B981"
+                      stroke={activeModule.accentColor === 'blue' ? '#3b82f6' : activeModule.accentColor === 'purple' ? '#8b5cf6' : '#10B981'}
                       strokeWidth="12"
                       fill="none"
                       strokeLinecap="round"
@@ -1382,7 +2316,7 @@ export default function LearnScreen() {
           {/* Categories + Search */}
           <div className="mt-6 flex flex-col lg:flex-row lg:items-center gap-3">
             <div className="flex flex-wrap gap-2">
-              {categories.slice(0, 6).map((c) => {
+              {categories.slice(0, 8).map((c) => {
                 const active = activeCat === c;
                 return (
                   <button
@@ -1428,7 +2362,7 @@ export default function LearnScreen() {
                   <div>
                     <p className="text-sm font-bold text-emerald-700 uppercase tracking-wide">MODULE CURRICULUM</p>
                     <h3 className="text-xl font-extrabold text-gray-900 mt-1">
-                      {appLang === 'hindi' ? "पाठ्यक्रम की रूपरेखा" : "Course Outline"}
+                      {appLang === 'hindi' ? "पाठ्यक्रम की रूपरेखा" : "Course Outline"} • {activeModule.titleEn}
                     </h3>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1701,7 +2635,7 @@ export default function LearnScreen() {
 
                 <div className="relative flex items-center justify-between">
                   <p className="text-sm font-semibold text-gray-900">Overall Progress</p>
-                  <p className="text-sm font-bold text-emerald-700">{pct}%</p>
+                  <p className="text-sm font-bold text-emerald-700">{totalProgressPercentage.toFixed(0)}%</p>
                 </div>
 
                 <div className="relative mt-4 flex items-center justify-center">
@@ -1717,25 +2651,25 @@ export default function LearnScreen() {
                         fill="none"
                         strokeLinecap="round"
                         strokeDasharray={2 * Math.PI * 46}
-                        strokeDashoffset={2 * Math.PI * 46 * (1 - pct / 100)}
+                        strokeDashoffset={2 * Math.PI * 46 * (1 - totalProgressPercentage / 100)}
                         style={{ transition: "stroke-dashoffset 600ms ease" }}
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <p className="text-2xl font-extrabold text-gray-900">
-                        {doneCount}/{totalCount}
+                        {totalCompleted}/{totalLessons}
                       </p>
-                      <p className="text-xs text-gray-500 font-semibold">UNITS DONE</p>
+                      <p className="text-xs text-gray-500 font-semibold">LESSONS DONE</p>
                     </div>
                   </div>
                 </div>
 
                 <div className="relative mt-4 rounded-2xl bg-emerald-50/80 backdrop-blur border border-emerald-200 p-4">
                   <p className="text-xs font-semibold text-emerald-900">
-                    Complete {Math.max(0, 2 - doneCount)} more lessons to unlock:
+                    Complete {Math.max(0, 5 - totalCompleted)} more lessons to unlock:
                   </p>
                   <p className="text-sm font-bold text-emerald-800 mt-1">
-                    {doneCount < 2 ? "Gold Saver badge" : "🎉 Next badge unlocked!"}
+                    {totalCompleted < 5 ? "Consistent Learner badge" : "🎉 Next badge unlocked!"}
                   </p>
                 </div>
               </div>
@@ -1876,7 +2810,7 @@ export default function LearnScreen() {
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
             <div className="absolute inset-0 flex items-center justify-center p-4">
               <div className="w-full max-w-4xl bg-white rounded-3xl overflow-hidden shadow-2xl">
-                <div className="p-4 bg-gradient-to-r from-emerald-600 to-green-500 text-white flex items-center justify-between">
+                <div className={`p-4 bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white flex items-center justify-between`}>
                   <div>
                     <p className="text-sm font-semibold">Module Learning</p>
                     <h3 className="text-lg font-bold">
@@ -1939,7 +2873,7 @@ export default function LearnScreen() {
                         markCompleted(moduleLessons[currentVideoIndex].id);
                         setVideoPlayerOpen(false);
                       }}
-                      className="px-6 py-3 rounded-full bg-gradient-to-r from-emerald-600 to-green-500 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                      className={`px-6 py-3 rounded-full bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2`}
                     >
                       <CheckCircle2 className="h-5 w-5" /> Mark as Completed
                     </button>
@@ -1956,7 +2890,7 @@ export default function LearnScreen() {
                     <button
                       type="button"
                       onClick={handleNextVideo}
-                      className="px-6 py-3 rounded-full bg-emerald-600 text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                      className={`px-6 py-3 rounded-full bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 flex items-center gap-2`}
                     >
                       {currentVideoIndex === moduleLessons.length - 1 ? 'Finish Module' : 'Next Lesson'} 
                       <ArrowRight className="h-5 w-5" />
@@ -1968,8 +2902,11 @@ export default function LearnScreen() {
                     <div className="flex items-center gap-3">
                       <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div 
-                          className="h-3 bg-gradient-to-r from-emerald-500 to-green-500 rounded-full transition-all"
-                          style={{ width: `${((currentVideoIndex + 1) / moduleLessons.length) * 100}%` }}
+                          className={`h-3 rounded-full transition-all`}
+                          style={{ 
+                            width: `${((currentVideoIndex + 1) / moduleLessons.length) * 100}%`,
+                            background: `linear-gradient(to right, ${activeModule.accentColor === 'blue' ? '#3b82f6' : activeModule.accentColor === 'purple' ? '#8b5cf6' : '#10b981'}, ${activeModule.accentColor === 'blue' ? '#60a5fa' : activeModule.accentColor === 'purple' ? '#a78bfa' : '#34d399'})`
+                          }}
                         />
                       </div>
                       <span className="text-sm font-semibold text-emerald-700">
@@ -2310,13 +3247,13 @@ export default function LearnScreen() {
                           </p>
                         </div>
                         
-                        {moduleQuizScore >= 5 && !badges.includes("Safety Champion") && (
+                        {moduleQuizScore >= 5 && !badges.includes(activeModule.badgeUnlocked) && (
                           <div className="p-4 rounded-2xl bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200">
                             <p className="font-semibold text-yellow-900">
-                              🎖️ Safety Champion Badge Unlocked!
+                              🎖️ {activeModule.badgeUnlocked} Badge Unlocked!
                             </p>
                             <p className="text-sm text-yellow-700">
-                              You've demonstrated excellent knowledge of financial safety!
+                              You've demonstrated excellent knowledge of {activeModule.titleEn}!
                             </p>
                           </div>
                         )}
@@ -2329,6 +3266,25 @@ export default function LearnScreen() {
                             <p className="text-sm text-amber-700">
                               Review the lessons and try again to improve your score!
                             </p>
+                          </div>
+                        )}
+                        
+                        {/* Premium Teaser for Module 3 */}
+                        {activeModule.id === "grow-your-money-wisely" && moduleQuizScore >= 5 && (
+                          <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-300">
+                            <p className="font-bold text-purple-900 text-lg">
+                              🚀 Ready for More Advanced Learning?
+                            </p>
+                            <p className="text-sm text-purple-700 mt-2">
+                              Want to learn how ₹500/month can grow into lakhs? Unlock Premium Courses for advanced investing strategies, stock market basics, real estate investing, and more!
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => alert("Premium courses coming soon!")}
+                              className="mt-3 px-6 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold hover:shadow-lg transition-all hover:-translate-y-0.5"
+                            >
+                              Explore Premium Courses
+                            </button>
                           </div>
                         )}
                       </div>
@@ -2362,7 +3318,7 @@ export default function LearnScreen() {
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm">
             <div className="absolute inset-0 flex items-center justify-center p-4">
               <div className="w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl">
-                <div className="p-6 bg-gradient-to-r from-emerald-600 to-green-500 text-white text-center">
+                <div className={`p-6 bg-gradient-to-r ${getAccentColorClass(activeModule)} text-white text-center`}>
                   <Award className="h-16 w-16 mx-auto mb-4" />
                   <h3 className="text-2xl font-bold">Congratulations! 🎉</h3>
                   <p className="mt-2">You've completed the {activeModule.titleEn} module!</p>
@@ -2389,10 +3345,10 @@ export default function LearnScreen() {
                         <p className="text-2xl font-bold text-gray-900">{moduleQuizScore * 10 + (moduleQuizScore >= 5 ? 30 : 0)}</p>
                       </div>
                     </div>
-                    {badges.includes("Safety Champion") && (
+                    {badges.includes(activeModule.badgeUnlocked) && (
                       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-100 to-amber-100 border border-yellow-300 mb-4">
                         <Award className="h-4 w-4 text-yellow-700" />
-                        <span className="text-sm font-bold text-yellow-800">Safety Champion Badge Awarded</span>
+                        <span className="text-sm font-bold text-yellow-800">{activeModule.badgeUnlocked} Badge Awarded</span>
                       </div>
                     )}
                     <p className="text-sm text-gray-500">Completed on {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>

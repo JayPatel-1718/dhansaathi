@@ -10,12 +10,15 @@ import LearnScreen from "./components/screens/LearnScreen";
 import HelpScreen from "./components/screens/HelpScreen";
 import VoiceProfileSetup from "./components/screens/VoiceProfileSetup";
 import DashboardScreen from "./components/screens/DashboardScreen";
+import VerifyScam from "./components/screens/VerifyScam";
+import DocumentHelp from "./components/screens/DocumentHelp";
 import SchemesScreen from "./components/screens/SchemesScreen";
 import CommunityScreen from "./components/screens/CommunityScreen";
 import AskAIScreen from "./components/screens/AskAIScreen"; // ✅ add
 import TrackerScreen from "./components/screens/TrackerScreen";
 import SchemeDetailScreen from "./components/screens/SchemeDetailScreen";
 import ProfileScreen from "./components/screens/ProfileScreen";
+import ChatbotWidget from "./components/ChatbotWidget";
 
 
 
@@ -32,6 +35,8 @@ function App() {
         <Route path="/voice-setup" element={<VoiceProfileSetup />} />
 
         <Route path="/home" element={<DashboardScreen />} />
+        <Route path="/verify-scheme" element={<VerifyScam />} />
+        <Route path="/document-help" element={<DocumentHelp />} />
         <Route path="/schemes" element={<SchemesScreen />} />
         <Route path="/community" element={<CommunityScreen />} />
         <Route path="/ask-ai" element={<AskAIScreen />} /> {/* ✅ add */}
@@ -46,6 +51,7 @@ function App() {
 
       
       </Routes>
+      <ChatbotWidget />
     </Router>
   );
 }

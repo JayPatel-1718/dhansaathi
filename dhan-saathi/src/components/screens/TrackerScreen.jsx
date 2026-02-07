@@ -25,6 +25,7 @@ import {
   IndianRupee,
   Mic,
   Trash2,
+  Globe,
 } from "lucide-react";
 
 import {
@@ -74,14 +75,18 @@ function getAllocation(monthlySavings) {
   ];
 }
 
-function getSchemeSuggestions(profile) {
+function getSchemeSuggestions(profile, isHindi = false) {
   const occ = normalize(profile?.occupation || "");
   const income = Number(profile?.monthlyIncome || 0);
 
   const suggestions = [];
 
   if (occ.includes("farmer") || occ.includes("kisan") || occ.includes("agri")) {
-    suggestions.push("PM Kisan Samman Nidhi (for farmers)");
+    suggestions.push(
+      isHindi 
+        ? "PM किसान सम्मान निधि (किसानों के लिए)"
+        : "PM Kisan Samman Nidhi (for farmers)"
+    );
   }
   if (
     occ.includes("business") ||
@@ -89,14 +94,30 @@ function getSchemeSuggestions(profile) {
     occ.includes("vendor") ||
     occ.includes("trader")
   ) {
-    suggestions.push("Pradhan Mantri Mudra Yojana (for small business loans)");
+    suggestions.push(
+      isHindi
+        ? "प्रधानमंत्री मुद्रा योजना (छोटे व्यवसाय ऋण के लिए)"
+        : "Pradhan Mantri Mudra Yojana (for small business loans)"
+    );
   }
 
   if (income > 0) {
-    suggestions.push("Post Office RD/FD (safe monthly saving habit)");
-    suggestions.push("PPF / APY (long-term retirement style options)");
+    suggestions.push(
+      isHindi
+        ? "पोस्ट ऑफिस आरडी/एफडी (सुरक्षित मासिक बचत आदत)"
+        : "Post Office RD/FD (safe monthly saving habit)"
+    );
+    suggestions.push(
+      isHindi
+        ? "पीपीएफ / एपीवाई (दीर्घकालिक सेवानिवृत्ति विकल्प)"
+        : "PPF / APY (long-term retirement style options)"
+    );
   } else {
-    suggestions.push("Explore Govt + Bank schemes in Schemes page");
+    suggestions.push(
+      isHindi
+        ? "योजना पृष्ठ में सरकारी + बैंक योजनाएं देखें"
+        : "Explore Govt + Bank schemes in Schemes page"
+    );
   }
 
   return [...new Set(suggestions)];
@@ -178,9 +199,13 @@ export default function TrackerScreen() {
   // savings entries this month
   const [entries, setEntries] = useState([]);
 
-  const selectedLanguage =
-    localStorage.getItem("dhan-saathi-language") || "english";
-  const voiceLang = selectedLanguage === "hindi" ? "hi-IN" : "en-IN";
+  // Language state
+  const [selectedLanguage, setSelectedLanguage] = useState(() => {
+    return localStorage.getItem("dhan-saathi-language") || "english";
+  });
+
+  const isHindi = selectedLanguage === "hindi";
+  const voiceLang = isHindi ? "hi-IN" : "en-IN";
 
   const speak = (text) => {
     try {
@@ -189,6 +214,106 @@ export default function TrackerScreen() {
       msg.lang = voiceLang;
       window.speechSynthesis.speak(msg);
     } catch {}
+  };
+
+  // Toggle language
+  const toggleLanguage = () => {
+    const newLang = isHindi ? "english" : "hindi";
+    setSelectedLanguage(newLang);
+    localStorage.setItem("dhan-saathi-language", newLang);
+    
+    // Speak confirmation
+    if (newLang === "hindi") {
+      speak("हिंदी भाषा चुनी गई है");
+    } else {
+      speak("English language selected");
+    }
+  };
+
+  // Text translations
+  const translations = {
+    // Navbar
+    home: isHindi ? "होम" : "Home",
+    schemes: isHindi ? "योजनाएं" : "Schemes",
+    community: isHindi ? "समुदाय" : "Community",
+    learn: isHindi ? "सीखें" : "Learn",
+    help: isHindi ? "सहायता" : "Help",
+    notifications: isHindi ? "सूचनाएं" : "Notifications",
+    logout: isHindi ? "लॉग आउट" : "Logout",
+    notSignedIn: isHindi ? "साइन इन नहीं किया गया" : "Not signed in",
+    
+    // Main section
+    title: isHindi ? "बचत ट्रैकर (एआई कोच)" : "Savings Tracker (AI Coach)",
+    subtitle: isHindi 
+      ? "आज की बचत दर्ज करें (या आपका औसत)। हम मासिक बचत का अनुमान लगाएंगे और एक आवंटन सुझाएंगे।"
+      : "Enter today's saving (or your average). We'll project monthly savings and suggest an allocation.",
+    
+    // Input section
+    placeholder: isHindi ? "₹ आज बचाई गई राशि (जैसे 100)" : "₹ amount saved today (e.g. 100)",
+    save: isHindi ? "सेव करें" : "Save",
+    speakAmount: isHindi ? "राशि बोलें" : "Speak amount",
+    
+    // Error/Success messages
+    pleaseSignIn: isHindi ? "कृपया अपना ट्रैकर डेटा सेव करने के लिए Google से साइन इन करें।" : "Please sign in with Google to save your tracker data.",
+    enterValidAmount: isHindi ? "एक वैध राशि दर्ज करें (₹)।" : "Enter a valid amount (₹).",
+    savedSuccess: isHindi ? "सेव हो गया! आपका डैशबोर्ड और ग्राफ अपडेट हो जाएगा।" : "Saved! Your dashboard and graphs will update.",
+    failedToSave: isHindi ? "सेव करने में विफल। कृपया पुनः प्रयास करें।" : "Failed to save. Please try again.",
+    voiceNotSupported: isHindi ? "यहां वॉइस इनपुट समर्थित नहीं है। राशि टाइप करें।" : "Voice input not supported here. Type the amount.",
+    voiceCaptureFailed: isHindi ? "वॉइस कैप्चर नहीं कर सका। कृपया राशि टाइप करें।" : "Could not capture voice. Please type the amount.",
+    voiceRecognitionFailed: isHindi ? "वॉइस रिकग्निशन शुरू नहीं हो सका।" : "Voice recognition failed to start.",
+    
+    // Reset section
+    resetTitle: isHindi ? "इस महीने रीसेट करें (सभी एंट्रीज़ हटाएं)" : "Reset this month (delete all entries)",
+    resetDescription: isHindi 
+      ? "यह फायरस्टोर से वर्तमान महीने के लिए सभी सेव की गई एंट्रीज़ को स्थायी रूप से हटा देगा।"
+      : "This permanently deletes all saved entries for the current month from Firestore.",
+    resetPlaceholder: isHindi ? '"DELETE" टाइप करके पुष्टि करें' : 'Type "DELETE" to confirm',
+    deleteAll: isHindi ? "सभी हटाएं (इस महीने)" : "Delete all (this month)",
+    deleting: isHindi ? "हटा रहे हैं..." : "Deleting...",
+    confirmReset: isHindi 
+      ? "यह वर्तमान महीने के लिए सभी बचत एंट्रीज़ को स्थायी रूप से हटा देगा। जारी रखें?"
+      : "This will permanently delete all savings entries for this month. Continue?",
+    pleaseSignInReset: isHindi ? "कृपया अपने ट्रैकर को रीसेट करने के लिए साइन इन करें।" : "Please sign in to reset your tracker.",
+    resetConfirmText: isHindi ? `"DELETE" टाइप करके पुष्टि करें` : `Type DELETE to confirm reset.`,
+    resetDone: isHindi 
+      ? (deleted) => `रीसेट हो गया। इस महीने के लिए ${deleted} एंट्रीज़ हटा दी गईं।`
+      : (deleted) => `Reset done. Deleted ${deleted} entries for this month.`,
+    noEntriesToDelete: isHindi 
+      ? "इस महीने हटाने के लिए कोई एंट्री नहीं मिली।"
+      : "No entries found to delete for this month.",
+    resetFailed: isHindi ? "रीसेट करने में विफल। कृपया पुनः प्रयास करें।" : "Failed to reset. Please try again.",
+    
+    // Charts
+    allocationTitle: isHindi ? "एआई आवंटन (अनुमानित)" : "AI Allocation (Projected)",
+    projectedMonthly: isHindi ? "अनुमानित मासिक बचत:" : "Projected monthly saving:",
+    note: isHindi ? "नोट: यह शैक्षिक मार्गदर्शन है, वित्तीय सलाह नहीं।" : "Note: This is educational guidance, not financial advice.",
+    
+    // Bar chart
+    monthlyChartTitle: isHindi ? "मासिक बचत (ग्राफ)" : "Monthly Saving (Graph)",
+    avgDaily: isHindi ? "औसत दैनिक:" : "Avg daily:",
+    daysLogged: isHindi ? "दर्ज किए गए दिन:" : "Days logged:",
+    
+    // Suggestions
+    aiSuggestions: isHindi ? "एआई सुझाव" : "AI Suggestions",
+    openSchemes: isHindi ? "योजनाएं खोलें →" : "Open Schemes →",
+    
+    // Entries section
+    entriesTitle: isHindi ? "इस महीने की एंट्रीज़" : "This Month Entries",
+    entriesSubtitle: isHindi 
+      ? "आपके औसत की गणना करने के लिए उपयोग की गई सेव की गई एंट्रीज़।"
+      : "Saved entries used to compute your averages.",
+    noEntries: isHindi 
+      ? "अभी तक कोई एंट्री नहीं। अपनी पहली एंट्री ऊपर सेव करें।"
+      : "No entries yet. Save your first entry above.",
+    
+    // Pie chart labels
+    emergency: isHindi ? "आपातकाल" : "Emergency",
+    safe: isHindi ? "सुरक्षित" : "Safe",
+    growth: isHindi ? "वृद्धि" : "Growth",
+    
+    // Bar chart labels
+    thisMonth: isHindi ? "यह महीना (दर्ज)" : "This Month (logged)",
+    projected: isHindi ? "अनुमानित (30 दिन)" : "Projected (30d)",
   };
 
   // auth
@@ -250,7 +375,17 @@ export default function TrackerScreen() {
     return () => document.removeEventListener("mousedown", onDown);
   }, []);
 
-  const displayName = fbUser?.displayName || "Guest";
+  // On first open, AI asks
+  useEffect(() => {
+    speak(
+      isHindi
+        ? "आज आपने कितनी बचत की? रुपये में बताएं।"
+        : "How much did you save today? Please say the amount in rupees."
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const displayName = fbUser?.displayName || (isHindi ? "अतिथि" : "Guest");
   const email = fbUser?.email || "";
 
   const initials = useMemo(() => {
@@ -262,7 +397,7 @@ export default function TrackerScreen() {
   }, [displayName, email]);
 
   const profile = userDoc?.profile || {};
-  const suggestions = useMemo(() => getSchemeSuggestions(profile), [profile]);
+  const suggestions = useMemo(() => getSchemeSuggestions(profile, isHindi), [profile, isHindi]);
 
   // stats
   const monthTotal = useMemo(
@@ -280,16 +415,22 @@ export default function TrackerScreen() {
   );
   const projectedMonthly = useMemo(() => avgDaily * 30, [avgDaily]);
 
-  const allocation = useMemo(
-    () => getAllocation(projectedMonthly),
-    [projectedMonthly]
-  );
+  // Update allocation with translated names
+  const allocation = useMemo(() => {
+    const rawAllocation = getAllocation(projectedMonthly);
+    return rawAllocation.map((item, index) => ({
+      ...item,
+      name: index === 0 ? translations.emergency : 
+            index === 1 ? translations.safe : 
+            translations.growth
+    }));
+  }, [projectedMonthly, translations.emergency, translations.safe, translations.growth]);
 
   // chart data
   const pieData = allocation.map((a) => ({ name: a.name, value: a.value }));
   const barData = [
-    { name: "This Month (logged)", value: monthTotal },
-    { name: "Projected (30d)", value: projectedMonthly },
+    { name: translations.thisMonth, value: monthTotal },
+    { name: translations.projected, value: projectedMonthly },
   ];
 
   const handleLogout = async () => {
@@ -308,7 +449,7 @@ export default function TrackerScreen() {
     setSavingError("");
     const rec = getRecognition();
     if (!rec) {
-      setSavingError("Voice input not supported here. Type the amount.");
+      setSavingError(translations.voiceNotSupported);
       return;
     }
 
@@ -321,7 +462,7 @@ export default function TrackerScreen() {
     rec.onerror = (e) => {
       console.error("Speech error:", e);
       setListening(false);
-      setSavingError("Could not capture voice. Please type the amount.");
+      setSavingError(translations.voiceCaptureFailed);
     };
 
     rec.onresult = (event) => {
@@ -333,7 +474,7 @@ export default function TrackerScreen() {
       rec.start();
     } catch (e) {
       console.error(e);
-      setSavingError("Voice recognition failed to start.");
+      setSavingError(translations.voiceRecognitionFailed);
     }
   };
 
@@ -342,24 +483,24 @@ export default function TrackerScreen() {
     setSavingSuccess("");
 
     if (!fbUser?.uid) {
-      setSavingError("Please sign in with Google to save your tracker data.");
+      setSavingError(translations.pleaseSignIn);
       return;
     }
 
     const amt = Number(todaySaving || 0);
     if (!amt || amt < 1) {
-      setSavingError("Enter a valid amount (₹).");
+      setSavingError(translations.enterValidAmount);
       return;
     }
 
     try {
       await addSavingsEntry(fbUser.uid, amt);
       setTodaySaving("");
-      setSavingSuccess("Saved! Your dashboard and graphs will update.");
-      speak(selectedLanguage === "hindi" ? "सेव हो गया।" : "Saved.");
+      setSavingSuccess(translations.savedSuccess);
+      speak(isHindi ? "सेव हो गया।" : "Saved.");
     } catch (e) {
       console.error(e);
-      setSavingError("Failed to save. Please try again.");
+      setSavingError(translations.failedToSave);
     }
   };
 
@@ -370,19 +511,17 @@ export default function TrackerScreen() {
     setSavingSuccess("");
 
     if (!fbUser?.uid) {
-      setResetMsg("Please sign in to reset your tracker.");
+      setResetMsg(translations.pleaseSignInReset);
       return;
     }
 
     const mustType = "DELETE";
     if (resetText.trim().toUpperCase() !== mustType) {
-      setResetMsg(`Type ${mustType} to confirm reset.`);
+      setResetMsg(translations.resetConfirmText);
       return;
     }
 
-    const ok = window.confirm(
-      "This will permanently delete all savings entries for this month. Continue?"
-    );
+    const ok = window.confirm(translations.confirmReset);
     if (!ok) return;
 
     try {
@@ -395,26 +534,18 @@ export default function TrackerScreen() {
       setResetText("");
       setResetMsg(
         deleted > 0
-          ? `Reset done. Deleted ${deleted} entries for this month.`
-          : "No entries found to delete for this month."
+          ? (typeof translations.resetDone === 'function' 
+              ? translations.resetDone(deleted) 
+              : `Reset done. Deleted ${deleted} entries for this month.`)
+          : translations.noEntriesToDelete
       );
     } catch (e) {
       console.error(e);
-      setResetMsg("Failed to reset. Please try again.");
+      setResetMsg(translations.resetFailed);
     } finally {
       setResetBusy(false);
     }
   };
-
-  // On first open, AI asks
-  useEffect(() => {
-    speak(
-      selectedLanguage === "hindi"
-        ? "आज आपने कितनी बचत की? रुपये में बताएं।"
-        : "How much did you save today? Please say the amount in rupees."
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Stable card style (no 3D transforms on chart parents)
   const chartCardClass =
@@ -445,43 +576,56 @@ export default function TrackerScreen() {
               onClick={goHome}
               className="flex items-center gap-1.5 hover:text-gray-900 transition"
             >
-              <Home className="h-4 w-4" /> Home
+              <Home className="h-4 w-4" /> {translations.home}
             </button>
             <button
               type="button"
               onClick={goSchemes}
               className="flex items-center gap-1.5 hover:text-gray-900 transition"
             >
-              <Building2 className="h-4 w-4" /> Schemes
+              <Building2 className="h-4 w-4" /> {translations.schemes}
             </button>
             <button
               type="button"
               onClick={goCommunity}
               className="flex items-center gap-1.5 hover:text-gray-900 transition"
             >
-              <Sparkle className="h-4 w-4" /> Community
+              <Sparkle className="h-4 w-4" /> {translations.community}
             </button>
             <button
               type="button"
               className="flex items-center gap-1.5 hover:text-gray-900 transition"
-              onClick={() => alert("Learn coming soon")}
+              onClick={() => navigate("/learn")}
             >
-              <BookOpen className="h-4 w-4" /> Learn
+              <BookOpen className="h-4 w-4" /> {translations.learn}
             </button>
             <button
               type="button"
               className="flex items-center gap-1.5 hover:text-gray-900 transition"
-              onClick={() => alert("Help coming soon")}
+              onClick={() => navigate("/help")}
             >
-              <MessageSquare className="h-4 w-4" /> Help
+              <MessageSquare className="h-4 w-4" /> {translations.help}
             </button>
           </nav>
 
           <div className="flex items-center gap-3">
+            {/* Language Toggle - Updated to match Dashboard */}
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-200 shadow-sm text-gray-700 hover:bg-gray-50 transition hover:-translate-y-0.5"
+            >
+              <Globe className="h-4 w-4" />
+              <span className="text-xs font-medium">
+                {isHindi ? "हिंदी" : "English"}
+              </span>
+              <span className="text-xs text-gray-500">⇄</span>
+            </button>
+
             <button
               type="button"
               className="hidden sm:inline-flex h-10 w-10 rounded-full bg-white border border-gray-200 shadow-sm items-center justify-center text-gray-700 hover:bg-gray-50"
-              title="Notifications"
+              title={translations.notifications}
             >
               <Bell className="h-5 w-5" />
             </button>
@@ -505,13 +649,13 @@ export default function TrackerScreen() {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 mt-3 w-72 rounded-2xl bg-white border border-gray-200 shadow-xl overflow-hidden">
+                <div className="absolute right-0 mt-3 w-72 rounded-2xl bg-white border border-gray-200 shadow-xl overflow-hidden z-50">
                   <div className="px-4 py-4">
                     <p className="text-sm font-semibold text-gray-900">
                       {displayName}
                     </p>
                     <p className="text-xs text-gray-600 mt-1 break-all">
-                      {email || "Not signed in"}
+                      {email || translations.notSignedIn}
                     </p>
                   </div>
                   <div className="h-px bg-gray-100" />
@@ -521,7 +665,7 @@ export default function TrackerScreen() {
                       className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
                       onClick={handleLogout}
                     >
-                      <LogOut className="h-4 w-4" /> Logout
+                      <LogOut className="h-4 w-4" /> {translations.logout}
                     </button>
                   ) : null}
                 </div>
@@ -537,11 +681,10 @@ export default function TrackerScreen() {
         <div className="rounded-3xl bg-gradient-to-br from-emerald-200/60 via-white to-sky-100/70 p-[1px] shadow-[0_28px_90px_rgba(15,23,42,0.20)]">
           <div className="rounded-3xl bg-white/90 backdrop-blur border border-gray-200 p-6">
             <h1 className="text-2xl font-bold text-gray-900">
-              Savings Tracker (AI Coach)
+              {translations.title}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
-              Enter today’s saving (or your average). We’ll project monthly
-              savings and suggest an allocation.
+              {translations.subtitle}
             </p>
 
             <div className="mt-4 flex gap-3">
@@ -550,7 +693,7 @@ export default function TrackerScreen() {
                 onChange={(e) =>
                   setTodaySaving(e.target.value.replace(/[^\d]/g, ""))
                 }
-                placeholder="₹ amount saved today (e.g. 100)"
+                placeholder={translations.placeholder}
                 className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 outline-none focus:ring-2 focus:ring-emerald-200 bg-white"
               />
 
@@ -563,7 +706,7 @@ export default function TrackerScreen() {
                     ? "bg-emerald-100 border-emerald-200 text-emerald-700"
                     : "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700"
                 }`}
-                title="Speak amount"
+                title={translations.speakAmount}
               >
                 <Mic className="h-6 w-6" />
               </button>
@@ -573,7 +716,7 @@ export default function TrackerScreen() {
                 onClick={submitTodaySaving}
                 className="px-5 rounded-2xl bg-green-600 text-white font-semibold hover:bg-green-700"
               >
-                Save
+                {translations.save}
               </button>
             </div>
 
@@ -588,18 +731,17 @@ export default function TrackerScreen() {
             <div className="mt-6 rounded-2xl border border-red-200 bg-red-50/60 p-4">
               <p className="text-sm font-semibold text-red-800 flex items-center gap-2">
                 <Trash2 className="h-4 w-4" />
-                Reset this month (delete all entries)
+                {translations.resetTitle}
               </p>
               <p className="text-xs text-red-700 mt-1">
-                This permanently deletes all saved entries for the current
-                month from Firestore.
+                {translations.resetDescription}
               </p>
 
               <div className="mt-3 flex flex-col sm:flex-row gap-3">
                 <input
                   value={resetText}
                   onChange={(e) => setResetText(e.target.value)}
-                  placeholder='Type "DELETE" to confirm'
+                  placeholder={translations.resetPlaceholder}
                   className="flex-1 px-4 py-3 rounded-2xl border border-red-200 outline-none focus:ring-2 focus:ring-red-200 bg-white"
                 />
                 <button
@@ -612,7 +754,7 @@ export default function TrackerScreen() {
                       : "bg-red-600 hover:bg-red-700"
                   }`}
                 >
-                  {resetBusy ? "Deleting..." : "Delete all (this month)"}
+                  {resetBusy ? translations.deleting : translations.deleteAll}
                 </button>
               </div>
 
@@ -629,10 +771,10 @@ export default function TrackerScreen() {
           <div className="rounded-3xl bg-gradient-to-br from-green-200/50 via-white to-blue-100/60 p-[1px]">
             <div className={chartCardClass}>
               <h2 className="text-lg font-bold text-gray-900">
-                AI Allocation (Projected)
+                {translations.allocationTitle}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Projected monthly saving:{" "}
+                {translations.projectedMonthly}{" "}
                 <span className="font-semibold">
                   {currency(projectedMonthly)}
                 </span>
@@ -708,7 +850,7 @@ export default function TrackerScreen() {
               </div>
 
               <p className="text-xs text-gray-500 mt-3">
-                Note: This is educational guidance, not financial advice.
+                {translations.note}
               </p>
             </div>
           </div>
@@ -717,12 +859,13 @@ export default function TrackerScreen() {
           <div className="rounded-3xl bg-gradient-to-br from-sky-200/50 via-white to-emerald-100/60 p-[1px]">
             <div className={chartCardClass}>
               <h2 className="text-lg font-bold text-gray-900">
-                Monthly Saving (Graph)
+                {translations.monthlyChartTitle}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Avg daily:{" "}
+                {translations.avgDaily}{" "}
                 <span className="font-semibold">{currency(avgDaily)}</span> •
-                Days logged: <span className="font-semibold">{daysLogged}</span>
+                {translations.daysLogged}{" "}
+                <span className="font-semibold">{daysLogged}</span>
               </p>
 
               <div className="mt-4 h-64">
@@ -738,7 +881,17 @@ export default function TrackerScreen() {
                         />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                    <XAxis 
+                      dataKey="name" 
+                      tick={{ fontSize: 12 }}
+                      tickFormatter={(value) => {
+                        // Handle long text in XAxis
+                        if (value.length > 10) {
+                          return value.substring(0, 8) + '...';
+                        }
+                        return value;
+                      }}
+                    />
                     <Tooltip formatter={(v) => currency(v)} />
                     <Bar
                       dataKey="value"
@@ -752,7 +905,7 @@ export default function TrackerScreen() {
 
               <div className="mt-4 rounded-2xl bg-gray-50 border border-gray-200 p-4">
                 <p className="text-sm font-semibold text-gray-900">
-                  AI Suggestions
+                  {translations.aiSuggestions}
                 </p>
                 <ul className="mt-2 space-y-1 text-sm text-gray-700 list-disc pl-5">
                   {suggestions.map((s) => (
@@ -765,7 +918,7 @@ export default function TrackerScreen() {
                   onClick={() => navigate("/schemes")}
                   className="mt-4 px-4 py-2 rounded-full bg-green-600 text-white text-sm font-semibold hover:bg-green-700"
                 >
-                  Open Schemes →
+                  {translations.openSchemes}
                 </button>
               </div>
             </div>
@@ -775,15 +928,15 @@ export default function TrackerScreen() {
         {/* Recent entries */}
         <div className="rounded-3xl bg-white/90 backdrop-blur border border-gray-200 shadow-xl p-6">
           <h3 className="text-lg font-bold text-gray-900">
-            This Month Entries
+            {translations.entriesTitle}
           </h3>
           <p className="text-sm text-gray-600 mt-1">
-            Saved entries used to compute your averages.
+            {translations.entriesSubtitle}
           </p>
 
           {entries.length === 0 ? (
             <p className="text-gray-600 mt-3">
-              No entries yet. Save your first entry above.
+              {translations.noEntries}
             </p>
           ) : (
             <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">

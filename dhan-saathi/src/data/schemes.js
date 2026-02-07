@@ -8,6 +8,8 @@ export const schemes = [
     type: "govt",
     tag: "FARMER",
     verified: true,
+    image: "/scheme-images/money.jpeg",
+
     title: "PM Kisan Samman Nidhi",
     desc:
       "Eligible farmer families receive annual income support of ₹6,000 in three installments directly to their bank accounts (as per scheme rules).",

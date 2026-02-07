@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 // ────────────────────────────────────────────────
 const LogoIcon = () => (
   <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="36" height="36" rx="10" fill="#16a34a" />
+    <rect width="50" height="50" rx="10" fill="#16a34a" />
     <path
       d="M18 9C13.8579 9 10.5 12.3579 10.5 16.5V19.5C10.5 23.6421 13.8579 27 18 27C22.1421 27 25.5 23.6421 25.5 19.5V16.5C25.5 12.3579 22.1421 9 18 9Z"
       fill="white"
@@ -77,15 +77,37 @@ const LanguageSelection = () => {
     { id: 'telugu',  name: 'తెలుగు',   greeting: 'నమస్కారం! ధన్‌సాథీకి స్వాగతం',     lang: 'te-IN' },
   ];
 
-  const handleLanguageSelect = (language) => {
-    setSelectedLanguage(language.id);
-    
-    // Speak greeting in selected language
-    window.speechSynthesis.cancel();
-    const msg = new SpeechSynthesisUtterance(language.greeting);
+  window.speechSynthesis.onvoiceschanged = () => {
+  window.speechSynthesis.getVoices();
+};
+
+const handleLanguageSelect = (language) => {
+  setSelectedLanguage(language.id);
+
+  // Stop previous voice
+  window.speechSynthesis.cancel();
+
+  // Create voice message
+  const msg = new SpeechSynthesisUtterance(language.greeting);
+
+  // Get available voices in laptop
+  const voices = window.speechSynthesis.getVoices();
+
+  // Check if selected language voice exists
+  const voiceExists = voices.some((v) => v.lang === language.lang);
+
+  // If voice exists → speak in that language
+  if (voiceExists) {
     msg.lang = language.lang;
-    window.speechSynthesis.speak(msg);
-  };
+  }
+  // Else → fallback to English voice
+  else {
+    msg.lang = "en-IN";
+  }
+
+  // Speak greeting
+  window.speechSynthesis.speak(msg);
+};
 
   const handleContinue = () => {
     if (!selectedLanguage) {
@@ -107,15 +129,20 @@ const LanguageSelection = () => {
 
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-5 sm:px-8 py-5">
-        <div className="flex items-center gap-3">
-          <LogoIcon />
-          <span className="text-2xl font-extrabold text-gray-900 tracking-tight">DhanSaathi</span>
-        </div>
-        <button className="flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-md transition-all">
-          <HelpIcon />
-          <span className="text-sm font-medium text-gray-700">Help / सहायता</span>
-        </button>
-      </header>
+  <div className="flex items-center gap-3">
+    {/* Replace the LogoIcon with your image */}
+    <img 
+      src="/Dhaansaathi.jpeg" // or full URL if hosted elsewhere
+      alt="DhanSaathi Logo"
+      className="w-9 h-9 object-contain rounded-lg"
+    />
+    <span className="text-2xl font-extrabold text-gray-900 tracking-tight">DhanSaathi</span>
+  </div>
+  <button className="flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm hover:bg-white hover:shadow-md transition-all">
+    <HelpIcon />
+    <span className="text-sm font-medium text-gray-700">Help / सहायता</span>
+  </button>
+</header>
 
       {/* Main Content */}
       <main className="relative z-10 flex-1 flex flex-col items-center px-5 sm:px-8 pt-6 pb-12">

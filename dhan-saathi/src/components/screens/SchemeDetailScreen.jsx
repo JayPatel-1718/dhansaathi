@@ -18,7 +18,6 @@ import {
   Sparkle,
   BookOpen,
   MessageSquare,
-  Mic,
   IndianRupee,
   Volume2,
   Bell,
@@ -703,8 +702,17 @@ export default function SchemeDetailScreen() {
             </div>
 
             <div className="hidden sm:block">
-              <div className="h-24 w-32 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-50 border border-slate-100" />
-            </div>
+  {scheme.image ? (
+    <img
+      src={scheme.image}
+      alt={scheme.title}
+      className="h-24 w-32 object-cover rounded-2xl border border-slate-200 shadow-md"
+    />
+  ) : (
+    <div className="h-24 w-32 rounded-2xl bg-gradient-to-br from-emerald-50 to-slate-50 border border-slate-100" />
+  )}
+</div>
+
           </div>
         </div>
 
@@ -825,27 +833,7 @@ export default function SchemeDetailScreen() {
         </div>
       </main>
 
-      {/* Bottom right voice widget */}
-      <div className="fixed bottom-6 right-6 flex items-end gap-3">
-        <div className="hidden md:block bg-white/90 backdrop-blur-xl border border-slate-200 rounded-3xl px-4 py-3 shadow-[0_18px_45px_rgba(15,23,42,0.10)]">
-          <p className="text-sm text-slate-700">
-            "Ask me: who can apply for this scheme?"
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="h-16 w-16 rounded-full bg-green-600 shadow-2xl flex items-center justify-center text-white hover:bg-green-700 transition transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-green-300"
-          aria-label="Voice assistant"
-          onClick={() =>
-            speak(
-              `How can I help you understand more about ${scheme.title} and its eligibility, benefits, and how to apply?`
-            )
-          }
-        >
-          <Mic className="h-7 w-7" />
-        </button>
-      </div>
+      {/* Voice widget removed */}
     </div>
   );
 }
